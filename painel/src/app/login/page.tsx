@@ -20,7 +20,8 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const apiUrl = `http://${window.location.hostname}:4000/api/auth/login`;
+      const backendBase = process.env.NEXT_PUBLIC_API_URL || `http://${window.location.hostname}:4000`;
+      const apiUrl = `${backendBase}/api/auth/login`;
       const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
