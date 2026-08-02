@@ -16,6 +16,14 @@ model Restaurant {
   password  String?  // Nova coluna para autenticação
   isMaster  Boolean  @default(false)
   active    Boolean  @default(true)
+  
+  // Assinaturas SaaS
+  planName              String?  @default("BÁSICO")
+  subscriptionStatus    String?  @default("TRIAL") // TRIAL, ACTIVE, PAST_DUE, CANCELED
+  subscriptionExpiresAt DateTime?
+  gatewayCustomerId     String?
+  gatewaySubscriptionId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

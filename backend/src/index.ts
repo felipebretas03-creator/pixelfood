@@ -261,32 +261,50 @@ const masterMiddleware = async (req: Request, res: Response, next: NextFunction)
 app.get('/api/master/restaurants', masterMiddleware, async (req, res) => {
   try {
     const restaurants = await prisma.restaurant.findMany({
-      include: {
-        settings: true,
-        orders: { select: { id: true, total: true } }
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        email: true,
+        isMaster: true,
+        active: true,
+        createdAt: true,
+        planName: true,
+        subscriptionStatus: true,
+        subscriptionExpiresAt: true,
+        orders: { select: { total: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
-    
-    // Transform data for the frontend
-    const data = restaurants.map(r => {
+
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const formatted = restaurants.map(r => {
       const ordersCount = r.orders.length;
-      const totalRevenue = r.orders.reduce((acc, o) => acc + o.total, 0);
-      return {
-        id: r.id,
-        name: r.name,
-        email: r.email,
-        slug: r.slug,
-        isMaster: r.isMaster,
-        active: r.active,
-        createdAt: r.createdAt,
-        storeName: r.settings?.storeName || r.name,
-        ordersCount,
-        totalRevenue
-      };
+      const totalRevenue = r.orders.reduce((sum, o) => sum + o.total, 0);
+      return { ...r, ordersCount, totalRevenue, orders: undefined };
     });
-    
-    res.json(data);
+
+    const totalUsers = formatted.filter(r => !r.isMaster).length;
+    const newUsers = formatted.filter(r => !r.isMaster && r.createdAt >= thirtyDaysAgo).length;
+    const defaulters = formatted.filter(r => !r.isMaster && (r.subscriptionStatus === 'PAST_DUE' || (r.subscriptionExpiresAt && r.subscriptionExpiresAt < now))).length;
+    const expiringSoon = formatted.filter(r => !r.isMaster && r.subscriptionExpiresAt && r.subscriptionExpiresAt > now && r.subscriptionExpiresAt <= sevenDaysFromNow).length;
+    const activeSubs = formatted.filter(r => !r.isMaster && r.subscriptionStatus === 'ACTIVE').length;
+    const trials = formatted.filter(r => !r.isMaster && r.subscriptionStatus === 'TRIAL').length;
+
+    res.json({
+      stores: formatted,
+      metrics: {
+        totalUsers,
+        newUsers,
+        defaulters,
+        expiringSoon,
+        activeSubs,
+        trials
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar restaurantes' });
   }
