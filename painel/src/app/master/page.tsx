@@ -30,7 +30,8 @@ export default function MasterAdminPage() {
 
   const loadStores = async () => {
     try {
-      const data = await apiFetch("/master/restaurants");
+      const res = await apiFetch("http://localhost:4000/api/master/restaurants");
+      const data = await res.json();
       setStores(data);
     } catch (error) {
       console.error(error);
@@ -48,7 +49,7 @@ export default function MasterAdminPage() {
     if (!confirm("Tem certeza que deseja alterar o status desta conta?")) return;
 
     try {
-      await apiFetch(`/master/restaurants/${id}/toggle`, { method: "POST" });
+      await apiFetch(`http://localhost:4000/api/master/restaurants/${id}/toggle`, { method: "POST" });
       loadStores();
     } catch (error) {
       alert("Erro ao alterar status");
