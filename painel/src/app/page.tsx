@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 import { printFechamentoReceipt } from '@/lib/printer';
+import { useAuthStore } from '@/store/authStore';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
   const [data, setData] = useState<any>({
@@ -18,6 +20,14 @@ export default function DashboardPage() {
   const [isClosureModalOpen, setIsClosureModalOpen] = useState(false);
   const [closureData, setClosureData] = useState<any>(null);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const { restaurant } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (restaurant?.isMaster) {
+      router.push('/master');
+    }
+  }, [restaurant, router]);
 
   const fetchDashboard = () => {
     apiFetch('http://localhost:4000/api/dashboard')
@@ -93,6 +103,10 @@ export default function DashboardPage() {
     setShowSuccessToast(true);
     setTimeout(() => setShowSuccessToast(false), 3000);
   };
+
+  if (restaurant?.isMaster) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-6">

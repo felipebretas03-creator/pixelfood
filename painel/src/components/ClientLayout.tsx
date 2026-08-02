@@ -134,8 +134,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               </div>
               
               {/* Copiar Link - Mobile */}
-              <button 
-                onClick={handleCopyLink}
+              {!restaurant?.isMaster && (
+                <button 
+                  onClick={handleCopyLink}
                 className="md:hidden flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 text-stone-600 hover:bg-stone-200 active:bg-stone-300 transition-colors"
                 title="Copiar link do delivery"
               >
@@ -145,11 +146,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                   <LinkIcon className="w-4 h-4" />
                 )}
               </button>
+              )}
             </div>
 
             {/* Navigation Links - Desktop */}
             <nav className="hidden md:flex flex-1 items-center gap-2">
-              {(restaurant?.isMaster ? [...NAV_ITEMS, { href: "/master", label: "Admin SaaS", icon: ShieldAlert }] : NAV_ITEMS).map((item) => {
+              {(restaurant?.isMaster ? [{ href: "/master", label: "Admin SaaS", icon: ShieldAlert }] : NAV_ITEMS).map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
                 return (
                   <Link 
@@ -170,7 +172,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
             {/* Right Side Actions - Desktop */}
             <div className="hidden md:flex items-center gap-6">
-              <button 
+              {!restaurant?.isMaster && (
+                <>
+                  <button 
                 onClick={handleCopyLink}
                 className="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border border-stone-200"
                 title="Copiar link do delivery"
@@ -199,6 +203,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                   <div className={`absolute top-1 bg-white w-6 h-6 rounded-full shadow-sm transition-all duration-300 ${isStoreOpen ? 'left-7' : 'left-1'}`} />
                 </button>
               </div>
+              </>}
 
               <button type="button" onClick={handleLogout} className="w-10 h-10 bg-stone-100 hover:bg-red-50 rounded-full flex items-center justify-center cursor-pointer border border-stone-200 transition-colors group" title="Sair do sistema">
                 <span className="font-bold text-sm text-stone-600 group-hover:hidden pointer-events-none">
@@ -212,7 +217,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       )}
 
       {/* Mobile Bottom Navigation */}
-      {(pathname !== "/aovivo" && pathname !== "/login" && pathname !== "/cadastro") && (
+      {(pathname !== "/aovivo" && pathname !== "/login" && pathname !== "/cadastro" && !restaurant?.isMaster) && (
         <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-stone-200 shadow-[0_-4px_24px_rgba(0,0,0,0.02)] flex items-center justify-around px-1 py-2 pb-[env(safe-area-inset-bottom,1rem)] z-[9999]">
           {NAV_ITEMS.filter(i => ["Dashboard", "Pedidos", "Cardápio", "Clientes", "Configurações"].includes(i.label)).map((item) => {
             const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
