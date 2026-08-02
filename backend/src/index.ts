@@ -294,13 +294,14 @@ app.get('/api/master/restaurants', masterMiddleware, async (req, res) => {
 
 app.post('/api/master/restaurants/:id/toggle', masterMiddleware, async (req, res) => {
   try {
-    const restaurant = await prisma.restaurant.findUnique({ where: { id: req.params.id } });
+    const id = req.params.id as string;
+    const restaurant = await prisma.restaurant.findUnique({ where: { id } });
     if (!restaurant) return res.status(404).json({ error: 'Restaurante não encontrado' });
     
     if (restaurant.isMaster) return res.status(400).json({ error: 'Não é possível bloquear o Master' });
     
     const updated = await prisma.restaurant.update({
-      where: { id: req.params.id },
+      where: { id },
       data: { active: !restaurant.active }
     });
     
