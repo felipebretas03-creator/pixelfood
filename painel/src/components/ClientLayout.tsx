@@ -124,12 +124,27 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       {(pathname !== "/aovivo" && pathname !== "/login" && pathname !== "/cadastro") && (
         <header className="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
           <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center gap-3 mr-8">
-              <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white">
-                <Store className="w-4 h-4" />
+            {/* Logo and Mobile Actions */}
+            <div className="flex items-center flex-1 justify-between md:justify-start md:mr-8 md:flex-none">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white">
+                  <Store className="w-4 h-4" />
+                </div>
+                <span className="font-black text-lg tracking-tight">PainelPixel</span>
               </div>
-              <span className="font-black text-lg tracking-tight">PainelPixel</span>
+              
+              {/* Copiar Link - Mobile */}
+              <button 
+                onClick={handleCopyLink}
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 text-stone-600 hover:bg-stone-200 active:bg-stone-300 transition-colors"
+                title="Copiar link do delivery"
+              >
+                {copied ? (
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                ) : (
+                  <LinkIcon className="w-4 h-4" />
+                )}
+              </button>
             </div>
 
             {/* Navigation Links - Desktop */}
