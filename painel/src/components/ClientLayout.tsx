@@ -203,7 +203,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                   <div className={`absolute top-1 bg-white w-6 h-6 rounded-full shadow-sm transition-all duration-300 ${isStoreOpen ? 'left-7' : 'left-1'}`} />
                 </button>
               </div>
-              </>}
+              </>
+              )}
 
               <button type="button" onClick={handleLogout} className="w-10 h-10 bg-stone-100 hover:bg-red-50 rounded-full flex items-center justify-center cursor-pointer border border-stone-200 transition-colors group" title="Sair do sistema">
                 <span className="font-bold text-sm text-stone-600 group-hover:hidden pointer-events-none">
