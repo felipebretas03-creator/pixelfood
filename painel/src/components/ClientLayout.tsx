@@ -109,7 +109,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   };
 
   const handleCopyLink = () => {
-    const deliveryLink = `http://localhost:3000/`; 
+    const deliveryLink = `https://pixelfood-app.vercel.app/${restaurant?.slug || ''}`; 
     navigator.clipboard.writeText(deliveryLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
