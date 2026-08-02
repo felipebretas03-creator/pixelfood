@@ -27,43 +27,18 @@ export const metadata: Metadata = {
   description: "Acompanhe seus pedidos, escolha seus pratos e receba em casa com a melhor experiência.",
 };
 
-import { BottomNavigation } from "@/components/BottomNavigation";
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let settings = null;
-  try {
-    const res = await fetch('http://127.0.0.1:4000/api/settings', { cache: 'no-store' });
-    if (res.ok) {
-      settings = await res.json();
-    }
-  } catch (err) {}
-
   return (
     <html
       lang="pt-BR"
       className={`${inter.variable} ${outfit.variable} h-full antialiased font-sans`}
     >
-      <head>
-        {settings?.primaryColor && (
-          <style dangerouslySetInnerHTML={{__html: `
-            :root {
-              --color-brand-50: ${settings.primaryColor}15;
-              --color-brand-100: ${settings.primaryColor}30;
-              --color-brand-200: ${settings.primaryColor}50;
-              --color-brand-500: ${settings.primaryColor};
-              --color-brand-600: ${settings.primaryColor};
-            }
-          `}} />
-        )}
-      </head>
       <body className="min-h-full flex flex-col bg-white text-stone-900 selection:bg-brand-200">
         {children}
-        <Toaster />
-        <BottomNavigation />
       </body>
     </html>
   );

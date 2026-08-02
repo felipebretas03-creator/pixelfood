@@ -3,7 +3,13 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
   let targetUrl = url.replace('http://127.0.0.1:4000', backendBase).replace('http://localhost:4000', backendBase);
   
   if (targetUrl.startsWith(backendBase)) {
-    const slug = process.env.NEXT_PUBLIC_RESTAURANT_SLUG;
+    let slug = process.env.NEXT_PUBLIC_RESTAURANT_SLUG;
+    if (!slug && typeof window !== 'undefined') {
+      const parts = window.location.pathname.split('/');
+      if (parts.length > 1 && parts[1] && parts[1] !== 'api' && parts[1] !== '_next') {
+        slug = parts[1];
+      }
+    }
     
     // Tenta pegar o token do usuario
     let token = '';
