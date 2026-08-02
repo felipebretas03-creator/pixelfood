@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Restaurant {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  name      String
+  email     String   @unique
+  password  String?  // Nova coluna para autenticação
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  settings         Settings?
+  loyaltySettings  LoyaltySettings?
+  categories       Category[]
+  products         Product[]
+  orders           Order[]
+  customers        Customer[]
+  coupons          Coupon[]
+  neighborhoodFees NeighborhoodFee[]
+}
+
+model Category {
+  id           String     @id @default(uuid())
+  restaurantId String
+  name         String
+  icon         String     @default("🍽️")
+  order        Int        @default(0)
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id           String      @id @default(uuid())
+  restaurantId String
+  name         String
+  description  String?
+  price        Float
+  image        String?
+  category     String
+  active       Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  orderItems   OrderItem[]
+  modifiers    ProductModifierGroup[]
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model ProductModifierGroup {
+  id        String                  @id @default(uuid())
+  productId String
+  name      String
+  min       Int                     @default(0)
+  max       Int                     @default(1)
+  options   ProductModifierOption[]
+  
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductModifierOption {
+  id        String               @id @default(uuid())
+  groupId   String
+  name      String
+  price     Float                @default(0)
+  
+  group     ProductModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id             String      @id @default(uuid())
+  restaurantId   String
+  orderNumber    String
+  customerName   String
+  status         String      @default("PENDING")
+  total          Float
+  paymentMethod  String
+  needsChange    Boolean     @default(false)
+  changeAmount   Float?
+  addressStreet  String?
+  addressNumber  String?
+  addressCity    String?
+  observation    String?
+  couponCode     String?
+  discountAmount Float       @default(0)
+  customerId     String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  
+  items          OrderItem[]
+  customer       Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  restaurant     Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([orderNumber, restaurantId])
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  productId   String?
+  name        String
+  quantity    Int
+  price       Float
+  observation String?
+  optionsData String?
+  
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+}
+
+model Coupon {
+  id              String     @id @default(uuid())
+  restaurantId    String
+  code            String
+  type            String
+  value           Float
+  active          Boolean    @default(true)
+  usageLimit      Int?
+  used            Int        @default(0)
+  ruleType        String     @default("ALL")
+  ruleCategory    String?
+  oncePerCustomer Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([code, restaurantId])
+}
+
+model Settings {
+  id           String     @id @default(uuid())
+  restaurantId String     @unique
+  storeName    String     @default("PixelFood Delivery")
+  primaryColor String     @default("#22c55e")
+  deliveryType String     @default("fixed")
+  deliveryFee  Float      @default(5.0)
+  isOpen       Boolean    @default(true)
+  logoUrl      String?
+  bannerUrl    String?
+  mpAccessToken String?
+  mpPublicKey   String?
+  acceptPix              Boolean    @default(true)
+  acceptCreditCardOnline Boolean    @default(true)
+  acceptCardMachine      Boolean    @default(true)
+  acceptCash             Boolean    @default(true)
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id           String     @id @default(uuid())
+  restaurantId String
+  name         String
+  email        String?    // Nova coluna para login
+  password     String?    // Nova coluna para login
+  phone        String
+  totalSpent   Float      @default(0)
+  ordersCount  Int        @default(0)
+  loyaltyPts   Int        @default(0)
+  lastOrderId  String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  orders       Order[]
+  addresses    CustomerAddress[]
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([phone, restaurantId])
+  @@unique([email, restaurantId])
+}
+
+model LoyaltySettings {
+  id              String     @id @default(uuid())
+  restaurantId    String     @unique
+  active          Boolean    @default(false)
+  pointsPerReal   Int        @default(1)
+  pointsToReward  Int        @default(100)
+  rewardType      String     @default("DISCOUNT") // "DISCOUNT" | "PRODUCT"
+  rewardValue     Float      @default(15.0)
+  rewardText      String?
+
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model NeighborhoodFee {
+  id           String     @id @default(uuid())
+  restaurantId String
+  city         String
+  neighborhood String
+  fee          Float
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, city, neighborhood])
+}
+
+model CustomerAddress {
+  id           String   @id @default(uuid())
+  customerId   String
+  street       String
+  number       String
+  neighborhood String?
+  city         String?
+  state        String?
+  label        String?
+  lat          Float?
+  lon          Float?
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
