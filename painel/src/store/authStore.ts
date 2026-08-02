@@ -6,6 +6,7 @@ interface RestaurantAuth {
   slug: string;
   name: string;
   email: string;
+  isMaster?: boolean;
 }
 
 interface AuthState {

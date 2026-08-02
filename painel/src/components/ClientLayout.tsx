@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShoppingBag, UtensilsCrossed, Users, Ticket, Settings, Store, MonitorPlay, LogOut, Link as LinkIcon, CheckCircle2 } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, UtensilsCrossed, Users, Ticket, Settings, Store, MonitorPlay, LogOut, Link as LinkIcon, CheckCircle2, ShieldAlert } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
@@ -149,7 +149,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
             {/* Navigation Links - Desktop */}
             <nav className="hidden md:flex flex-1 items-center gap-2">
-              {NAV_ITEMS.map((item) => {
+              {(restaurant?.isMaster ? [...NAV_ITEMS, { href: "/master", label: "Admin SaaS", icon: ShieldAlert }] : NAV_ITEMS).map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
                 return (
                   <Link 

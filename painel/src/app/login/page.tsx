@@ -39,7 +39,8 @@ export default function LoginPage() {
           id: data.id,
           name: data.name,
           slug: data.slug,
-          email: data.email
+          email: data.email,
+          isMaster: data.isMaster
         },
         token: data.token
       });
