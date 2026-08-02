@@ -3,8 +3,13 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { ShieldAlert, Store, TrendingUp, Users, Search, Ban, CheckCircle } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
 
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
+};
 interface SaaSStore {
   id: string;
   name: string;
