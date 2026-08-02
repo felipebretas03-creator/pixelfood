@@ -10,6 +10,15 @@ const formatCurrency = (value: number) => {
     currency: 'BRL',
   }).format(value);
 };
+interface DashboardMetrics {
+  totalUsers: number;
+  newUsers: number;
+  defaulters: number;
+  expiringSoon: number;
+  activeSubs: number;
+  trials: number;
+}
+
 interface SaaSStore {
   id: string;
   name: string;
@@ -18,13 +27,16 @@ interface SaaSStore {
   isMaster: boolean;
   active: boolean;
   createdAt: string;
-  storeName: string;
+  planName: string;
+  subscriptionStatus: string;
+  subscriptionExpiresAt: string | null;
   ordersCount: number;
   totalRevenue: number;
 }
 
 export default function MasterAdminPage() {
   const [stores, setStores] = useState<SaaSStore[]>([]);
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -32,7 +44,8 @@ export default function MasterAdminPage() {
     try {
       const res = await apiFetch("http://localhost:4000/api/master/restaurants");
       const data = await res.json();
-      setStores(data);
+      setStores(data.stores || []);
+      setMetrics(data.metrics || null);
     } catch (error) {
       console.error(error);
     } finally {
@@ -89,35 +102,35 @@ export default function MasterAdminPage() {
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center">
-              <Store className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-stone-500">Total de Lojas</p>
-              <h3 className="text-2xl font-bold text-stone-900">{totalStores}</h3>
-            </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-stone-500 uppercase tracking-wide">Total de Usuários</p>
+            <h3 className="text-3xl font-black text-stone-900 mt-2">{metrics?.totalUsers || 0}</h3>
           </div>
           
-          <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-50 text-green-500 rounded-xl flex items-center justify-center">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-stone-500">Faturamento Global</p>
-              <h3 className="text-2xl font-bold text-stone-900">{formatCurrency(globalRevenue)}</h3>
-            </div>
+          <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-stone-500 uppercase tracking-wide">Novos (30 dias)</p>
+            <h3 className="text-3xl font-black text-brand-600 mt-2">+{metrics?.newUsers || 0}</h3>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-stone-500">Lojas Ativas</p>
-              <h3 className="text-2xl font-bold text-stone-900">{activeStores}</h3>
-            </div>
+          <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-stone-500 uppercase tracking-wide">Em Trial</p>
+            <h3 className="text-3xl font-black text-stone-900 mt-2">{metrics?.trials || 0}</h3>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-stone-500 uppercase tracking-wide">Assinantes Ativos</p>
+            <h3 className="text-3xl font-black text-green-600 mt-2">{metrics?.activeSubs || 0}</h3>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-stone-500 uppercase tracking-wide">Prestes a Vencer</p>
+            <h3 className="text-3xl font-black text-yellow-600 mt-2">{metrics?.expiringSoon || 0}</h3>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-stone-500 uppercase tracking-wide">Inadimplentes</p>
+            <h3 className="text-3xl font-black text-red-600 mt-2">{metrics?.defaulters || 0}</h3>
           </div>
         </div>
 
@@ -143,8 +156,8 @@ export default function MasterAdminPage() {
                 <tr className="bg-stone-50 border-b border-stone-200">
                   <th className="px-6 py-4 text-xs font-bold text-stone-500 uppercase">Loja</th>
                   <th className="px-6 py-4 text-xs font-bold text-stone-500 uppercase">E-mail de Acesso</th>
+                  <th className="px-6 py-4 text-xs font-bold text-stone-500 uppercase">Assinatura</th>
                   <th className="px-6 py-4 text-xs font-bold text-stone-500 uppercase">Faturamento</th>
-                  <th className="px-6 py-4 text-xs font-bold text-stone-500 uppercase">Status</th>
                   <th className="px-6 py-4 text-xs font-bold text-stone-500 uppercase text-right">Ação</th>
                 </tr>
               </thead>
@@ -164,39 +177,49 @@ export default function MasterAdminPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-stone-600">{store.email}</td>
                     <td className="px-6 py-4">
+                      {store.isMaster ? (
+                        <span className="text-xs font-bold text-stone-400 bg-stone-100 px-3 py-1.5 rounded-lg">MASTER</span>
+                      ) : (
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center gap-2">
+                            {store.subscriptionStatus === 'ACTIVE' && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-green-600 border border-green-200">ATIVO</span>}
+                            {store.subscriptionStatus === 'TRIAL' && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-200">TRIAL</span>}
+                            {store.subscriptionStatus === 'PAST_DUE' && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">VENCIDO</span>}
+                            {store.subscriptionStatus === 'CANCELED' && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-stone-100 text-stone-600 border border-stone-200">CANCELADO</span>}
+                            <span className="text-xs font-bold text-stone-700">{store.planName}</span>
+                          </div>
+                          {store.subscriptionExpiresAt && (
+                            <span className="text-xs text-stone-500">
+                              Vence em: {new Date(store.subscriptionExpiresAt).toLocaleDateString('pt-BR')}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
                       <p className="font-bold text-stone-900">{formatCurrency(store.totalRevenue)}</p>
                       <p className="text-xs text-stone-500">{store.ordersCount} pedidos</p>
                     </td>
-                    <td className="px-6 py-4">
-                      {store.active ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-600 border border-green-200">
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          Ativa
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
-                          <Ban className="w-3.5 h-3.5" />
-                          Bloqueada
-                        </span>
-                      )}
-                    </td>
                     <td className="px-6 py-4 text-right">
                       {!store.isMaster && (
-                        <button
-                          onClick={() => toggleStatus(store.id, store.isMaster)}
-                          className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
-                            store.active 
-                              ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-                              : "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
-                          }`}
-                        >
-                          {store.active ? 'Bloquear' : 'Desbloquear'}
-                        </button>
-                      )}
-                      {store.isMaster && (
-                        <span className="text-xs font-bold text-stone-400 bg-stone-100 px-3 py-1.5 rounded-lg">
-                          MASTER
-                        </span>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => alert('Em breve: Enviar Link da Cakto')}
+                            className="px-3 py-1.5 text-xs font-bold rounded-lg transition-colors border bg-white text-stone-700 border-stone-200 hover:bg-stone-50"
+                          >
+                            Cobrar
+                          </button>
+                          <button
+                            onClick={() => toggleStatus(store.id, store.isMaster)}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors border ${
+                              store.active 
+                                ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                                : "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
+                            }`}
+                          >
+                            {store.active ? 'Bloquear' : 'Desbloquear'}
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
