@@ -1350,6 +1350,44 @@ app.put('/api/loyalty', ownerMiddleware, async (req, res) => {
   }
 });
 
+// ==========================================
+// CAKTO WEBHOOK - Aprovação de Pagamentos
+// ==========================================
+app.post('/api/webhooks/cakto', async (req, res) => {
+  try {
+    const { event, data } = req.body;
+    
+    // Na Cakto, geralmente o evento de pagamento aprovado é algo como "transaction.approved" ou "order.approved"
+    if (event === 'transaction.approved' || event === 'order.approved' || data?.status === 'approved') {
+      const email = data.customer?.email || data.email;
+      if (!email) {
+        return res.status(400).json({ error: 'Email não fornecido no webhook' });
+      }
+
+      const restaurant = await prisma.restaurant.findUnique({ where: { email } });
+      if (restaurant) {
+        const now = new Date();
+        const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        
+        await prisma.restaurant.update({
+          where: { email },
+          data: {
+            active: true,
+            subscriptionStatus: 'ACTIVE',
+            subscriptionExpiresAt: nextMonth,
+          }
+        });
+        console.log(`[Cakto] Assinatura renovada para ${email}`);
+      }
+    }
+    
+    res.status(200).send('Webhook processado');
+  } catch (error) {
+    console.error('[Cakto] Erro no webhook:', error);
+    res.status(500).send('Erro interno');
+  }
+});
+
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`🔥 PixelFood API rodando na porta ${PORT}`);
