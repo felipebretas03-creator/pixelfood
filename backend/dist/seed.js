@@ -66,8 +66,13 @@ async function main() {
             description: "Porção generosa de batatas rústicas fritas com casca, temperadas com páprica e alecrim.",
         }
     ];
+    const firstRestaurant = await prisma.restaurant.findFirst();
+    if (!firstRestaurant) {
+        console.error('❌ Crie um restaurante primeiro.');
+        return;
+    }
     for (const p of productsData) {
-        await prisma.product.create({ data: p });
+        await prisma.product.create({ data: { ...p, restaurantId: firstRestaurant.id } });
     }
     console.log('✅ Seed finalizado com sucesso!');
 }

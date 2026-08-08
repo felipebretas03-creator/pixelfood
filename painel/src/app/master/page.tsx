@@ -70,8 +70,9 @@ export default function MasterAdminPage() {
   };
 
   const filteredStores = stores.filter(s => 
-    s.name.toLowerCase().includes(search.toLowerCase()) || 
-    s.email.toLowerCase().includes(search.toLowerCase())
+    !s.isMaster &&
+    (s.name.toLowerCase().includes(search.toLowerCase()) || 
+    s.email.toLowerCase().includes(search.toLowerCase()))
   );
 
   const totalStores = stores.length;

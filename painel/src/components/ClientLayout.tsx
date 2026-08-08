@@ -127,10 +127,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             {/* Logo and Mobile Actions */}
             <div className="flex items-center flex-1 justify-between md:justify-start md:mr-8 md:flex-none">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white">
-                  <Store className="w-4 h-4" />
-                </div>
-                <span className="font-black text-lg tracking-tight">PainelPixel</span>
+                <img src="/logo.png" alt="PixelFood" className="h-8 w-auto object-contain" />
               </div>
               
               {/* Copiar Link - Mobile */}
@@ -151,7 +148,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
             {/* Navigation Links - Desktop */}
             <nav className="hidden md:flex flex-1 items-center gap-2">
-              {(restaurant?.isMaster ? [{ href: "/master", label: "Admin SaaS", icon: ShieldAlert }] : NAV_ITEMS).map((item) => {
+              {(restaurant?.isMaster ? [] : NAV_ITEMS).map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
                 return (
                   <Link 
