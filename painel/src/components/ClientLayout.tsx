@@ -29,15 +29,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     setMounted(true);
-    const authStatus = localStorage.getItem('pixelfood_painel_auth');
-    if (authStatus === 'true') {
-      useAuthStore.setState({ isAuthenticated: true });
-    } else {
-      useAuthStore.setState({ isAuthenticated: false });
-      if (pathname !== '/login') {
-        router.push('/login');
-      }
-    }
+
     
     // Unlock Audio Context on first click anywhere in the dashboard
     const unlockAudio = () => {
