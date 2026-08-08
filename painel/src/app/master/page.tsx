@@ -96,7 +96,7 @@ export default function MasterAdminPage() {
           <div>
             <h1 className="text-2xl font-black text-stone-900 tracking-tight flex items-center gap-2">
               <ShieldAlert className="w-6 h-6 text-red-500" />
-              SaaS Admin
+              PixelFood Admin
             </h1>
             <p className="text-stone-500 mt-1">Visão global de todos os restaurantes do SaaS.</p>
           </div>
