@@ -22,7 +22,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const [isStoreOpen, setIsStoreOpen] = useState(true);
-  const { isAuthenticated, logout, restaurant } = useAuthStore();
+  const { isAuthenticated, logout, tenant } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -101,7 +101,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   };
 
   const handleCopyLink = () => {
-    const deliveryLink = `https://pixelfood-app.vercel.app/${restaurant?.slug || ''}`; 
+    const deliveryLink = `https://pixelfood-app.vercel.app/${tenant?.slug || ''}`; 
     navigator.clipboard.writeText(deliveryLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -123,7 +123,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               </div>
               
               {/* Copiar Link - Mobile */}
-              {!restaurant?.isMaster && (
+              {!tenant?.isMaster && (
                 <button 
                   onClick={handleCopyLink}
                 className="md:hidden flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 text-stone-600 hover:bg-stone-200 active:bg-stone-300 transition-colors"
@@ -140,7 +140,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
             {/* Navigation Links - Desktop */}
             <nav className="hidden md:flex flex-1 items-center gap-2">
-              {(restaurant?.isMaster ? [] : NAV_ITEMS).map((item) => {
+              {(tenant?.isMaster ? [] : NAV_ITEMS).map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
                 return (
                   <Link 
@@ -161,7 +161,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
             {/* Right Side Actions - Desktop */}
             <div className="hidden md:flex items-center gap-6">
-              {!restaurant?.isMaster && (
+              {!tenant?.isMaster && (
                 <>
                   <button 
                 onClick={handleCopyLink}
@@ -197,7 +197,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
               <button type="button" onClick={handleLogout} className="w-10 h-10 bg-stone-100 hover:bg-red-50 rounded-full flex items-center justify-center cursor-pointer border border-stone-200 transition-colors group" title="Sair do sistema">
                 <span className="font-bold text-sm text-stone-600 group-hover:hidden pointer-events-none">
-                  {restaurant?.name ? restaurant.name.substring(0, 2).toUpperCase() : 'MF'}
+                  {tenant?.name ? tenant.name.substring(0, 2).toUpperCase() : 'MF'}
                 </span>
                 <LogOut className="w-4 h-4 text-red-500 hidden group-hover:block ml-1 pointer-events-none" />
               </button>
@@ -207,7 +207,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       )}
 
       {/* Mobile Bottom Navigation */}
-      {(pathname !== "/aovivo" && pathname !== "/login" && pathname !== "/cadastro" && !restaurant?.isMaster) && (
+      {(pathname !== "/aovivo" && pathname !== "/login" && pathname !== "/cadastro" && !tenant?.isMaster) && (
         <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-stone-200 shadow-[0_-4px_24px_rgba(0,0,0,0.02)] flex items-center justify-around px-1 py-2 pb-[env(safe-area-inset-bottom,1rem)] z-[9999]">
           {NAV_ITEMS.filter(i => ["Dashboard", "Pedidos", "Cardápio", "Clientes", "Configurações"].includes(i.label)).map((item) => {
             const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));

@@ -20,14 +20,14 @@ export default function DashboardPage() {
   const [isClosureModalOpen, setIsClosureModalOpen] = useState(false);
   const [closureData, setClosureData] = useState<any>(null);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const { restaurant } = useAuthStore();
+  const { tenant } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (restaurant?.isMaster) {
+    if (tenant?.isMaster) {
       router.push('/master');
     }
-  }, [restaurant, router]);
+  }, [tenant, router]);
 
   const fetchDashboard = () => {
     apiFetch('http://localhost:4000/api/dashboard')
@@ -104,7 +104,7 @@ export default function DashboardPage() {
     setTimeout(() => setShowSuccessToast(false), 3000);
   };
 
-  if (restaurant?.isMaster) {
+  if (tenant?.isMaster) {
     return null;
   }
 

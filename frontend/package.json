@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build",
+    "build:staging": "NEXT_PUBLIC_API_URL=https://staging-api.pixelfood.com next build",
     "start": "next start",
+    "start:staging": "next start -p 3000",
     "lint": "eslint"
   },
   "dependencies": {

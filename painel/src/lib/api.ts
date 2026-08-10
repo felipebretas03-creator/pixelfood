@@ -2,13 +2,13 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
   const backendBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
   let targetUrl = url.replace('http://localhost:4000', backendBase).replace('http://127.0.0.1:4000', backendBase);
   
-  let restaurantId = '';
+  let tenantId = '';
   let token = '';
   try {
     const authStorage = localStorage.getItem('painel-auth-storage');
     if (authStorage) {
       const parsed = JSON.parse(authStorage);
-      restaurantId = parsed.state?.restaurant?.id || '';
+      tenantId = parsed.state?.tenant?.id || '';
       token = parsed.state?.token || '';
     }
   } catch (e) {}
@@ -22,7 +22,7 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
-    ...(restaurantId ? { 'x-restaurant-id': restaurantId } : {}),
+    ...(tenantId ? { 'x-tenant-id': tenantId } : {}),
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
   };
 

@@ -35,7 +35,7 @@ export default function LoginPage() {
       }
 
       login({
-        restaurant: {
+        tenant: {
           id: data.id,
           name: data.name,
           slug: data.slug,

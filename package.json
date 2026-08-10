@@ -1,0 +1,29 @@
+{
+  "name": "pixelfood",
+  "version": "1.0.0",
+  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/felipebretas03-creator/pixelfood.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/felipebretas03-creator/pixelfood/issues"
+  },
+  "homepage": "https://github.com/felipebretas03-creator/pixelfood#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "artillery": "^2.0.33",
+    "tsx": "^4.23.12"
+  }
+}

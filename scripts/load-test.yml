@@ -1,0 +1,32 @@
+config:
+  target: 'http://127.0.0.1:4000'
+  phases:
+    - duration: 20
+      arrivalRate: 5
+      name: Warm up
+    - duration: 30
+      arrivalRate: 20
+      name: Ramp up load
+    - duration: 20
+      arrivalRate: 50
+      name: Sustained peak load
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+
+scenarios:
+  - name: "Consumidor navegando no cardápio"
+    flow:
+      - get:
+          url: "/health"
+      - get:
+          url: "/api/master/restaurants"
+          
+  - name: "Consumidor abrindo configurações do tenant (mock tenant)"
+    weight: 2
+    flow:
+      # Esse endpoint não requer auth
+      - get:
+          url: "/api/settings"
+          headers:
+            x-tenant-id: "tenant-mock-id"

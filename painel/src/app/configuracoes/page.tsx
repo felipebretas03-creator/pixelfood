@@ -173,11 +173,11 @@ export default function ConfiguracoesPage() {
     formData.append('logo', file);
 
     const authStorage = localStorage.getItem('painel-auth-storage');
-    let restaurantId = '';
+    let tenantId = '';
     if (authStorage) {
       try {
         const parsed = JSON.parse(authStorage);
-        restaurantId = parsed.state?.restaurant?.id || '';
+        tenantId = parsed.state?.tenant?.id || '';
       } catch (err) {}
     }
 
@@ -185,7 +185,7 @@ export default function ConfiguracoesPage() {
       const res = await fetch('http://localhost:4000/api/settings/logo', {
         method: 'POST',
         headers: {
-          'x-restaurant-id': restaurantId
+          'x-tenant-id': tenantId
         },
         body: formData
       });
@@ -211,11 +211,11 @@ export default function ConfiguracoesPage() {
     formData.append('banner', file);
 
     const authStorage = localStorage.getItem('painel-auth-storage');
-    let restaurantId = '';
+    let tenantId = '';
     if (authStorage) {
       try {
         const parsed = JSON.parse(authStorage);
-        restaurantId = parsed.state?.restaurant?.id || '';
+        tenantId = parsed.state?.tenant?.id || '';
       } catch (err) {}
     }
 
@@ -223,7 +223,7 @@ export default function ConfiguracoesPage() {
       const res = await fetch('http://localhost:4000/api/settings/banner', {
         method: 'POST',
         headers: {
-          'x-restaurant-id': restaurantId
+          'x-tenant-id': tenantId
         },
         body: formData
       });

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { ShieldAlert, Store, TrendingUp, Users, Search, Ban, CheckCircle } from "lucide-react";
+import { ShieldAlert, Store, TrendingUp, Users, Search, Ban, CheckCircle, X, Loader2, Send } from "lucide-react";
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -39,6 +39,68 @@ export default function MasterAdminPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+
+  const [selectedStore, setSelectedStore] = useState<SaaSStore | null>(null);
+  const [billingPlan, setBillingPlan] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
+  const [billingValue, setBillingValue] = useState<string>('97.00');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
+  const [broadcastSubject, setBroadcastSubject] = useState("");
+  const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
+
+  const handleSendBroadcast = async () => {
+    if (!broadcastSubject || !broadcastMessage) {
+      alert("Preencha o assunto e a mensagem.");
+      return;
+    }
+    setIsSendingBroadcast(true);
+    try {
+      const res = await apiFetch(`http://localhost:4000/api/master/broadcast`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject: broadcastSubject, message: broadcastMessage })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Erro ao enviar comunicados");
+        return;
+      }
+      alert(`Comunicado enviado com sucesso para ${data.count} restaurantes!`);
+      setIsBroadcastOpen(false);
+      setBroadcastSubject("");
+      setBroadcastMessage("");
+    } catch (err) {
+      alert("Erro de conexão");
+    } finally {
+      setIsSendingBroadcast(false);
+    }
+  };
+
+  const handleGenerateSubscription = async () => {
+    if (!selectedStore) return;
+    setIsGenerating(true);
+    try {
+      const res = await apiFetch(`http://localhost:4000/api/master/restaurants/${selectedStore.id}/asaas-subscription`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cycle: billingPlan, value: parseFloat(billingValue) })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Erro ao gerar assinatura");
+        return;
+      }
+      alert("Assinatura criada com sucesso no Asaas! O cliente receberá a fatura por e-mail.");
+      setSelectedStore(null);
+      loadStores();
+    } catch (err) {
+      alert("Erro de conexão");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const loadStores = async () => {
     try {
@@ -100,6 +162,13 @@ export default function MasterAdminPage() {
             </h1>
             <p className="text-stone-500 mt-1">Visão global de todos os restaurantes do SaaS.</p>
           </div>
+          <button 
+            onClick={() => setIsBroadcastOpen(true)}
+            className="bg-brand-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-brand-600 transition-colors flex items-center gap-2"
+          >
+            <Send className="w-4 h-4" />
+            Enviar Comunicado
+          </button>
         </div>
 
         {/* Metrics */}
@@ -205,7 +274,7 @@ export default function MasterAdminPage() {
                       {!store.isMaster && (
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => alert('Em breve: Enviar Link da Cakto')}
+                            onClick={() => setSelectedStore(store)}
                             className="px-3 py-1.5 text-xs font-bold rounded-lg transition-colors border bg-white text-stone-700 border-stone-200 hover:bg-stone-50"
                           >
                             Cobrar
@@ -239,6 +308,111 @@ export default function MasterAdminPage() {
         </div>
         
       </div>
+
+      {/* Modal Cobrança Asaas */}
+      {selectedStore && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl flex flex-col gap-6 relative">
+            <button onClick={() => setSelectedStore(null)} className="absolute top-4 right-4 text-stone-400 hover:text-stone-900 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <h2 className="text-xl font-black text-stone-900">Gerar Assinatura</h2>
+              <p className="text-sm text-stone-500 mt-1">Loja: {selectedStore.name} ({selectedStore.email})</p>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">Ciclo de Cobrança</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button 
+                    onClick={() => setBillingPlan('MONTHLY')}
+                    className={`py-2 px-4 rounded-xl text-sm font-bold border transition-colors ${billingPlan === 'MONTHLY' ? 'bg-brand-50 border-brand-500 text-brand-600' : 'bg-stone-50 border-stone-200 text-stone-600'}`}
+                  >
+                    Mensal
+                  </button>
+                  <button 
+                    onClick={() => setBillingPlan('YEARLY')}
+                    className={`py-2 px-4 rounded-xl text-sm font-bold border transition-colors ${billingPlan === 'YEARLY' ? 'bg-brand-50 border-brand-500 text-brand-600' : 'bg-stone-50 border-stone-200 text-stone-600'}`}
+                  >
+                    Anual
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">Valor (R$)</label>
+                <input 
+                  type="number" 
+                  value={billingValue}
+                  onChange={(e) => setBillingValue(e.target.value)}
+                  step="0.01"
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-brand-500 focus:bg-white transition-all"
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={handleGenerateSubscription}
+              disabled={isGenerating}
+              className="w-full bg-brand-500 text-white rounded-xl py-3 font-bold hover:bg-brand-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              {isGenerating && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isGenerating ? 'Processando...' : 'Confirmar e Cobrar (Asaas)'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Broadcast */}
+      {isBroadcastOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-lg shadow-xl flex flex-col gap-6 relative">
+            <button onClick={() => setIsBroadcastOpen(false)} className="absolute top-4 right-4 text-stone-400 hover:text-stone-900 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <h2 className="text-xl font-black text-stone-900">Enviar Comunicado</h2>
+              <p className="text-sm text-stone-500 mt-1">Isso enviará um e-mail para todos os lojistas ativos.</p>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">Assunto do E-mail</label>
+                <input 
+                  type="text" 
+                  value={broadcastSubject}
+                  onChange={(e) => setBroadcastSubject(e.target.value)}
+                  placeholder="Ex: Nova atualização disponível!"
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-brand-500 focus:bg-white transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">Mensagem</label>
+                <textarea 
+                  value={broadcastMessage}
+                  onChange={(e) => setBroadcastMessage(e.target.value)}
+                  placeholder="Digite sua mensagem aqui..."
+                  rows={5}
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-brand-500 focus:bg-white transition-all resize-none"
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={handleSendBroadcast}
+              disabled={isSendingBroadcast}
+              className="w-full bg-brand-500 text-white rounded-xl py-3 font-bold hover:bg-brand-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              {isSendingBroadcast && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isSendingBroadcast ? 'Enviando...' : 'Disparar para todos'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

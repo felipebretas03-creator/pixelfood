@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface RestaurantAuth {
+interface TenantAuth {
   id: string;
   slug: string;
   name: string;
@@ -10,21 +10,21 @@ interface RestaurantAuth {
 }
 
 interface AuthState {
-  restaurant: RestaurantAuth | null;
+  tenant: TenantAuth | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (data: { restaurant: RestaurantAuth, token: string }) => void;
+  login: (data: { tenant: TenantAuth, token: string }) => void;
   logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      restaurant: null,
+      tenant: null,
       token: null,
       isAuthenticated: false,
-      login: ({ restaurant, token }) => set({ restaurant, token, isAuthenticated: true }),
-      logout: () => set({ restaurant: null, token: null, isAuthenticated: false }),
+      login: ({ tenant, token }) => set({ tenant, token, isAuthenticated: true }),
+      logout: () => set({ tenant: null, token: null, isAuthenticated: false }),
     }),
     {
       name: 'painel-auth-storage',
