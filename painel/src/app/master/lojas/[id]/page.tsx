@@ -22,6 +22,49 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+const formatActionName = (action: string) => {
+  const map: Record<string, string> = {
+    'PLAN_CHANGED': 'Alteração de Plano',
+    'IMPERSONATION_STARTED': 'Acesso Administrativo',
+    'STORE_SUSPENDED': 'Loja Suspensa',
+    'STORE_REACTIVATED': 'Loja Reativada',
+    'STORE_CANCELED': 'Assinatura Cancelada'
+  };
+  return map[action] || action;
+};
+
+const formatLogMetadata = (action: string, metadataStr: string) => {
+  try {
+    const data = JSON.parse(metadataStr);
+    
+    switch (action) {
+      case 'PLAN_CHANGED':
+        return (
+          <div className="space-y-1">
+            <p><span className="font-semibold text-stone-700">Novo Plano:</span> {data.newPlan === 'ACTIVE' ? 'Ativo' : data.newPlan === 'LIFETIME' ? 'Vitalício/Liberado' : data.newPlan}</p>
+            {data.days && <p><span className="font-semibold text-stone-700">Duração:</span> {data.days === 'infinity' ? 'Sem validade (Vitalício)' : `${data.days} dias`}</p>}
+            {data.reason && <p><span className="font-semibold text-stone-700">Motivo:</span> {data.reason === 'Lifetime access revoked by master' ? 'Acesso vitalício revogado' : data.reason}</p>}
+          </div>
+        );
+      case 'IMPERSONATION_STARTED':
+        return <p><span className="font-semibold text-stone-700">IP de Acesso:</span> {data.ip}</p>;
+      case 'STORE_SUSPENDED':
+      case 'STORE_REACTIVATED':
+        return data.reason ? <p><span className="font-semibold text-stone-700">Motivo:</span> {data.reason}</p> : <p className="text-stone-400 italic">Sem motivo informado</p>;
+      default:
+        return (
+          <div className="space-y-1">
+            {Object.entries(data).map(([key, value]) => (
+              <p key={key}><span className="font-semibold text-stone-700 capitalize">{key}:</span> {String(value)}</p>
+            ))}
+          </div>
+        );
+    }
+  } catch (e) {
+    return <p>{metadataStr}</p>;
+  }
+};
+
 export default function LojaDetalhes() {
   const { id } = useParams();
   const router = useRouter();
@@ -498,13 +541,13 @@ export default function LojaDetalhes() {
                 <div className="space-y-3">
                   {activity.logs.map((log: any) => (
                     <div key={log.id} className="p-3 bg-stone-50 border border-stone-200 rounded-lg text-sm">
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="font-bold text-stone-700 bg-stone-200 px-2 py-0.5 rounded text-xs">{log.action}</span>
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="font-bold text-stone-700 bg-stone-200 px-2 py-0.5 rounded text-xs">{formatActionName(log.action)}</span>
                         <span className="text-stone-400 text-xs">{new Date(log.createdAt).toLocaleString('pt-BR')}</span>
                       </div>
                       {log.metadata && (
-                        <div className="text-stone-500 mt-2 text-xs font-mono bg-white p-2 border border-stone-200 rounded overflow-x-auto">
-                          {log.metadata}
+                        <div className="text-stone-600 mt-2 text-sm bg-white p-3 border border-stone-100 rounded-lg shadow-sm">
+                          {formatLogMetadata(log.action, log.metadata)}
                         </div>
                       )}
                     </div>
