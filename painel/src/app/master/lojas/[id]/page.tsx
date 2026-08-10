@@ -32,7 +32,7 @@ export default function LojaDetalhes() {
 
   const fetchTenant = async () => {
     try {
-      const res = await apiFetch(`/api/master/tenants/${id}`);
+      const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}`);
       if (res.ok) setTenant(await res.json());
     } catch (error) {
       console.error(error);
@@ -45,7 +45,7 @@ export default function LojaDetalhes() {
     if (!confirm(`Tem certeza que deseja ${action} esta loja?`)) return;
     setActionLoading(true);
     try {
-      const res = await apiFetch(`/api/master/tenants/${id}/${action}`, { method: 'POST' });
+      const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/${action}`, { method: 'POST' });
       if (res.ok) {
         fetchTenant();
       }
@@ -59,7 +59,7 @@ export default function LojaDetalhes() {
   const handleImpersonate = async () => {
     if (!confirm("Você entrará no painel como administrador desta loja. Deseja continuar?")) return;
     try {
-      const res = await apiFetch(`/api/master/tenants/${id}/impersonate`, { method: 'POST' });
+      const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/impersonate`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         // Replace current token with impersonated token

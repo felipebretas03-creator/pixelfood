@@ -14,7 +14,7 @@ export default function AuditoriaMaster() {
 
   const fetchLogs = async () => {
     try {
-      const res = await apiFetch(`/api/master/audit-logs`);
+      const res = await apiFetch(`http://localhost:4000/api/master/audit-logs`);
       if (res.ok) setLogs(await res.json());
     } catch (error) {
       console.error(error);

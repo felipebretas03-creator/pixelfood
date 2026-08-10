@@ -16,7 +16,7 @@ export default function ComunicadosMaster() {
     
     setLoading(true);
     try {
-      const res = await apiFetch(`/api/master/communications`, {
+      const res = await apiFetch(`http://localhost:4000/api/master/communications`, {
         method: 'POST',
         body: JSON.stringify({ title, message, targetAudience })
       });

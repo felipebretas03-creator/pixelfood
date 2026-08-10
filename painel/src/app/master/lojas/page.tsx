@@ -34,7 +34,7 @@ export default function LojasMaster() {
 
   const fetchPlans = async () => {
     try {
-      const res = await apiFetch('/api/plans'); // adjust if master has a different route
+      const res = await apiFetch('http://localhost:4000/api/plans'); // adjust if master has a different route
       if (res.ok) setPlans(await res.json());
     } catch(e) {}
   };
@@ -42,7 +42,7 @@ export default function LojasMaster() {
   const fetchTenants = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch(`/api/master/tenants?page=${page}&limit=20&search=${search}&status=${status}`);
+      const res = await apiFetch(`http://localhost:4000/api/master/tenants?page=${page}&limit=20&search=${search}&status=${status}`);
       if (res.ok) {
         const json = await res.json();
         setTenants(json.data);
@@ -59,7 +59,7 @@ export default function LojasMaster() {
     e.preventDefault();
     setCreating(true);
     try {
-      const res = await apiFetch('/api/master/tenants', {
+      const res = await apiFetch('http://localhost:4000/api/master/tenants', {
         method: 'POST',
         body: JSON.stringify(newStore)
       });
