@@ -137,6 +137,21 @@ router.post('/tenants/:id/suspend', async (req, res) => {
   }
 });
 
+// 4.5 CANCELAR ASSINATURA LOJA
+router.post('/tenants/:id/cancel', async (req, res) => {
+  try {
+    const tenant = await prisma.tenant.update({
+      where: { id: req.params.id },
+      data: { subscriptionStatus: 'CANCELED' }
+    });
+    const user = (req as any).user;
+    await logAudit('STORE_CANCELED', user.id, tenant.id, { reason: req.body.reason });
+    res.json(tenant);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao cancelar loja' });
+  }
+});
+
 // 5. REATIVAR LOJA
 router.post('/tenants/:id/reactivate', async (req, res) => {
   try {

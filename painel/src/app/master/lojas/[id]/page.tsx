@@ -77,9 +77,14 @@ export default function LojaDetalhes() {
         setActionLoading(true);
         try {
           const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/${action}`, { method: 'POST' });
-          if (res.ok) fetchTenant();
-        } catch (error) {
-          alert("Erro ao realizar ação.");
+          if (res.ok) {
+            fetchTenant();
+          } else {
+            const err = await res.json().catch(() => ({}));
+            alert(err.error || "Erro ao realizar ação na API.");
+          }
+        } catch (error: any) {
+          alert(error.message || "Erro de conexão ao realizar ação.");
         } finally {
           setActionLoading(false);
         }
@@ -98,9 +103,14 @@ export default function LojaDetalhes() {
         setActionLoading(true);
         try {
           const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/lifetime`, { method: 'POST' });
-          if (res.ok) fetchTenant();
-        } catch (error) {
-          alert("Erro ao aplicar acesso vitalício.");
+          if (res.ok) {
+            fetchTenant();
+          } else {
+            const err = await res.json().catch(() => ({}));
+            alert(err.error || "Erro ao aplicar acesso vitalício na API.");
+          }
+        } catch (error: any) {
+          alert(error.message || "Erro de conexão ao aplicar acesso vitalício.");
         } finally {
           setActionLoading(false);
         }
@@ -127,9 +137,12 @@ export default function LojaDetalhes() {
               localStorage.setItem('painel-auth-storage', JSON.stringify(authData));
               window.location.href = '/';
             }
+          } else {
+            const err = await res.json().catch(() => ({}));
+            alert(err.error || "Erro ao impersonar loja na API.");
           }
-        } catch (error) {
-          alert("Erro ao impersonar loja.");
+        } catch (error: any) {
+          alert(error.message || "Erro de conexão ao impersonar loja.");
         }
       }
     );
