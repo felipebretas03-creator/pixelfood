@@ -165,7 +165,7 @@ app.post('/api/auth/login', async (req, res) => {
   // Pega o primeiro tenant ou o tenant enviado no cabeçalho
   const membership = user.memberships[0];
   const tenant = membership.tenant;
-  const isMaster = user.email === 'felipebretas03@gmail.com';
+  const isMaster = user.email === 'felipebretas03@gmail.com' || user.email === 'admin@admin.com';
 
   const token = jwt.sign(
     { id: user.id, role: membership.role, tenantId: tenant.id, isMaster }, 
