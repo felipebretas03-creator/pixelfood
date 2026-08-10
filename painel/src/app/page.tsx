@@ -32,7 +32,13 @@ export default function DashboardPage() {
   const fetchDashboard = () => {
     apiFetch('http://localhost:4000/api/dashboard')
       .then(res => res.json())
-      .then(json => setData(json))
+      .then(json => {
+        if (json.error) {
+          console.error('API Error:', json.error);
+          return;
+        }
+        setData(json);
+      })
       .catch(console.error);
   };
 
@@ -179,10 +185,10 @@ export default function DashboardPage() {
           </div>
           
           <div className="flex flex-col gap-4 flex-1">
-            {data.recentOrders.length === 0 && (
+            {data.recentOrders?.length === 0 && (
               <p className="text-stone-500 text-sm text-center py-4">Nenhum pedido recente.</p>
             )}
-            {data.recentOrders.map((order: any) => (
+            {data.recentOrders?.map((order: any) => (
               <div key={order.id} className="flex items-center justify-between pb-4 border-b border-stone-50 last:border-0 last:pb-0">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
