@@ -23,6 +23,7 @@ const formatCurrency = (value: number) => {
 export default function MasterDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDashboard();
@@ -34,9 +35,13 @@ export default function MasterDashboard() {
       if (res.ok) {
         const json = await res.json();
         setData(json);
+      } else {
+        const text = await res.text();
+        setErrorMsg(`Erro API: ${res.status} - ${text}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      setErrorMsg(`Exceção: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -50,10 +55,11 @@ export default function MasterDashboard() {
     );
   }
 
-  if (!data) {
+  if (!data || errorMsg) {
     return (
       <div className="text-center mt-20">
         <h2 className="text-xl font-bold text-stone-700">Erro ao carregar os dados</h2>
+        {errorMsg && <p className="text-sm text-red-500 mt-2">{errorMsg}</p>}
       </div>
     );
   }

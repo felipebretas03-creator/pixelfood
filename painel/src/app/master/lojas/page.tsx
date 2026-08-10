@@ -9,7 +9,8 @@ import {
   MoreVertical, 
   Store, 
   Loader2, 
-  Filter
+  Filter,
+  X
 } from "lucide-react";
 
 export default function LojasMaster() {
@@ -19,10 +20,24 @@ export default function LojasMaster() {
   const [status, setStatus] = useState("ALL");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newStore, setNewStore] = useState({ name: '', email: '', phone: '', document: '', planId: '' });
+  const [plans, setPlans] = useState<any[]>([]);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchTenants();
+    fetchPlans();
   }, [search, status, page]);
+
+  const fetchPlans = async () => {
+    try {
+      const res = await apiFetch('/api/plans'); // adjust if master has a different route
+      if (res.ok) setPlans(await res.json());
+    } catch(e) {}
+  };
 
   const fetchTenants = async () => {
     setLoading(true);
@@ -40,6 +55,28 @@ export default function LojasMaster() {
     }
   };
 
+  const handleCreateStore = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const res = await apiFetch('/api/master/tenants', {
+        method: 'POST',
+        body: JSON.stringify(newStore)
+      });
+      if (res.ok) {
+        setIsModalOpen(false);
+        setNewStore({ name: '', email: '', phone: '', document: '', planId: '' });
+        fetchTenants();
+      } else {
+        alert('Erro ao criar loja');
+      }
+    } catch (e) {
+      alert('Erro ao criar loja');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -47,7 +84,10 @@ export default function LojasMaster() {
           <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Lojas ({total})</h1>
           <p className="text-sm text-stone-500 mt-1">Gerencie todos os restaurantes cadastrados.</p>
         </div>
-        <button className="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm shadow-brand-500/20 flex items-center justify-center gap-2">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm shadow-brand-500/20 flex items-center justify-center gap-2"
+        >
           <Plus className="w-5 h-5" />
           Cadastrar Loja
         </button>
@@ -166,6 +206,55 @@ export default function LojasMaster() {
           </div>
         )}
       </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-stone-900/50 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-6 border-b border-stone-100">
+              <h2 className="text-lg font-bold text-stone-900">Cadastrar Nova Loja</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-stone-400 hover:text-stone-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              <form onSubmit={handleCreateStore} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-stone-700 mb-1">Nome da Loja</label>
+                  <input type="text" required value={newStore.name} onChange={e => setNewStore({...newStore, name: e.target.value})} className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-stone-700 mb-1">E-mail do Administrador</label>
+                  <input type="email" required value={newStore.email} onChange={e => setNewStore({...newStore, email: e.target.value})} className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-stone-700 mb-1">Telefone</label>
+                  <input type="text" required value={newStore.phone} onChange={e => setNewStore({...newStore, phone: e.target.value})} className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-stone-700 mb-1">CPF ou CNPJ</label>
+                  <input type="text" required value={newStore.document} onChange={e => setNewStore({...newStore, document: e.target.value})} className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-stone-700 mb-1">Plano (Opcional)</label>
+                  <select value={newStore.planId} onChange={e => setNewStore({...newStore, planId: e.target.value})} className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <option value="">Selecione um plano...</option>
+                    {plans.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="pt-4 flex justify-end gap-3">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-stone-600 font-semibold hover:bg-stone-100 rounded-lg">Cancelar</button>
+                  <button type="submit" disabled={creating} className="px-4 py-2 bg-brand-500 text-white font-semibold rounded-lg hover:bg-brand-600 disabled:opacity-50 flex items-center gap-2">
+                    {creating && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Criar Loja
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

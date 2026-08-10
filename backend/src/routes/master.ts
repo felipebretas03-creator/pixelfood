@@ -22,7 +22,7 @@ const masterMiddleware = async (req: Request, res: Response, next: NextFunction)
   const token = authHeader.split(' ')[1];
   try {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    if (decoded.role !== 'owner' || !decoded.isMaster) {
+    if ((decoded.role !== 'owner' && decoded.role !== 'OWNER') || !decoded.isMaster) {
       return res.status(403).json({ error: 'Proibido' });
     }
     (req as any).user = decoded;
