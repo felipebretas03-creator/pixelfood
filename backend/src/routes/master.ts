@@ -183,7 +183,20 @@ router.get('/audit-logs', async (req, res) => {
       orderBy: { createdAt: 'desc' },
       take: 50
     });
-    res.json(logs);
+    
+    const userIds = [...new Set(logs.map(l => l.actorUserId).filter(Boolean))] as string[];
+    const tenantIds = [...new Set(logs.map(l => l.tenantId).filter(Boolean))] as string[];
+    
+    const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true } });
+    const tenants = await prisma.tenant.findMany({ where: { id: { in: tenantIds } }, select: { id: true, name: true } });
+    
+    const enrichedLogs = logs.map(log => ({
+      ...log,
+      actorUser: users.find(u => u.id === log.actorUserId) || null,
+      tenant: tenants.find(t => t.id === log.tenantId) || null,
+    }));
+    
+    res.json(enrichedLogs);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao listar auditoria' });
   }

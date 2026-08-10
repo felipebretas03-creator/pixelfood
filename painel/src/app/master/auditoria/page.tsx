@@ -5,6 +5,18 @@ import { apiFetch } from "@/lib/api";
 import { Activity, Loader2, Search } from "lucide-react";
 
 export default function AuditoriaMaster() {
+  const translateAction = (action: string) => {
+    switch (action) {
+      case 'IMPERSONATION_STARTED': return 'Acesso à conta da Loja';
+      case 'STORE_CREATED': return 'Criação de nova Loja';
+      case 'PLAN_CHANGED': return 'Alteração de Plano';
+      case 'COMMUNICATION_SENT': return 'Envio de Comunicado em Massa';
+      case 'TENANT_SUSPENDED': return 'Suspensão de Loja';
+      case 'TENANT_REACTIVATED': return 'Reativação de Loja';
+      case 'TENANT_CANCELED': return 'Cancelamento de Assinatura';
+      default: return action;
+    }
+  };
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,8 +51,8 @@ export default function AuditoriaMaster() {
               <tr>
                 <th className="px-6 py-4">Data / Hora</th>
                 <th className="px-6 py-4">Ação</th>
-                <th className="px-6 py-4">Ator (Usuário ID)</th>
-                <th className="px-6 py-4">Loja Afetada (ID)</th>
+                <th className="px-6 py-4">Ator (Quem fez)</th>
+                <th className="px-6 py-4">Loja Afetada</th>
                 <th className="px-6 py-4">Metadados</th>
               </tr>
             </thead>
@@ -64,15 +76,27 @@ export default function AuditoriaMaster() {
                       {new Date(log.createdAt).toLocaleString('pt-BR')}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-stone-900 text-white rounded font-mono text-xs">
-                        {log.action}
+                      <span className="font-semibold text-stone-900 block">
+                        {translateAction(log.action)}
                       </span>
+                      <span className="text-[10px] text-stone-400 uppercase tracking-wider">{log.action}</span>
                     </td>
-                    <td className="px-6 py-4 text-xs font-mono text-stone-400">
-                      {log.actorUserId || '-'}
+                    <td className="px-6 py-4 text-sm text-stone-600">
+                      {log.actorUser ? (
+                        <div>
+                          <div className="font-semibold">{log.actorUser.name}</div>
+                          <div className="text-xs text-stone-400">{log.actorUser.email}</div>
+                        </div>
+                      ) : (
+                        <span className="text-xs font-mono text-stone-400">{log.actorUserId || 'Sistema'}</span>
+                      )}
                     </td>
-                    <td className="px-6 py-4 text-xs font-mono text-stone-400">
-                      {log.tenantId || '-'}
+                    <td className="px-6 py-4 text-sm text-stone-600">
+                      {log.tenant ? (
+                        <div className="font-semibold text-brand-600">{log.tenant.name}</div>
+                      ) : (
+                        <span className="text-xs font-mono text-stone-400">{log.tenantId || '-'}</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       {log.metadata ? (
