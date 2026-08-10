@@ -394,4 +394,28 @@ router.post('/tenants/:id/lifetime', async (req, res) => {
   }
 });
 
+// 10. REVOGAR VITALÍCIO
+router.post('/tenants/:id/revoke-lifetime', async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    const tenant = await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { 
+        subscriptionStatus: 'ACTIVE',
+        lifetimeExpiresAt: null
+      }
+    });
+    
+    const user = (req as any).user;
+    await logAudit('PLAN_CHANGED', user.id, tenantId, { 
+      newPlan: 'ACTIVE',
+      reason: 'Lifetime access revoked by master'
+    });
+    
+    res.json(tenant);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao revogar acesso vitalício' });
+  }
+});
+
 export default router;

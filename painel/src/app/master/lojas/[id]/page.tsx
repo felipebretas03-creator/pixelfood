@@ -132,6 +132,32 @@ export default function LojaDetalhes() {
     );
   };
 
+  const handleRevokeLifetime = async () => {
+    openConfirmModal(
+      'Revogar Acesso',
+      'Tem certeza que deseja revogar o acesso liberado desta loja? Ela voltará a ser cobrada nas próximas faturas.',
+      'Revogar',
+      async () => {
+        closeConfirmModal();
+        setActionLoading(true);
+        try {
+          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/revoke-lifetime`, { method: 'POST' });
+          if (res.ok) {
+            fetchTenant();
+          } else {
+            const err = await res.json().catch(() => ({}));
+            alert(err.error || "Erro ao revogar acesso na API.");
+          }
+        } catch (error: any) {
+          alert(error.message || "Erro de conexão ao revogar acesso.");
+        } finally {
+          setActionLoading(false);
+        }
+      },
+      true // isDestructive
+    );
+  };
+
   const handleImpersonate = async () => {
     openConfirmModal(
       'Entrar como Loja',
@@ -209,13 +235,21 @@ export default function LojaDetalhes() {
             <LogIn className="w-4 h-4" /> Entrar como Loja
           </button>
 
-          {tenant.subscriptionStatus !== 'LIFETIME' && (
+          {tenant.subscriptionStatus !== 'LIFETIME' ? (
             <button 
               onClick={handleLifetime}
               disabled={actionLoading}
               className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-semibold text-sm rounded-lg transition-colors disabled:opacity-50"
             >
               <Star className="w-4 h-4" /> Tornar Vitalício
+            </button>
+          ) : (
+            <button 
+              onClick={handleRevokeLifetime}
+              disabled={actionLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 hover:bg-stone-200 font-semibold text-sm rounded-lg transition-colors disabled:opacity-50"
+            >
+              <Ban className="w-4 h-4" /> Revogar Vitalício
             </button>
           )}
           
