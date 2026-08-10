@@ -14,7 +14,9 @@ import {
   Calendar,
   CreditCard,
   Users,
-  Activity
+  Activity,
+  Shield,
+  Star
 } from "lucide-react";
 import Link from "next/link";
 
@@ -51,6 +53,21 @@ export default function LojaDetalhes() {
       }
     } catch (error) {
       alert("Erro ao realizar ação.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleLifetime = async () => {
+    if (!confirm("Tem certeza que deseja dar acesso vitalício a esta loja? Ela não será mais cobrada mensalmente.")) return;
+    setActionLoading(true);
+    try {
+      const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/lifetime`, { method: 'POST' });
+      if (res.ok) {
+        fetchTenant();
+      }
+    } catch (error) {
+      alert("Erro ao aplicar acesso vitalício.");
     } finally {
       setActionLoading(false);
     }
@@ -104,6 +121,7 @@ export default function LojaDetalhes() {
               {tenant.name}
               <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
                 tenant.subscriptionStatus === 'ACTIVE' ? 'bg-green-50 text-green-700 border-green-200' :
+                tenant.subscriptionStatus === 'LIFETIME' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
                 tenant.subscriptionStatus === 'TRIALING' ? 'bg-purple-50 text-purple-700 border-purple-200' :
                 tenant.subscriptionStatus === 'SUSPENDED' ? 'bg-red-50 text-red-700 border-red-200' :
                 'bg-stone-50 text-stone-700 border-stone-200'
@@ -122,6 +140,16 @@ export default function LojaDetalhes() {
           >
             <LogIn className="w-4 h-4" /> Entrar como Loja
           </button>
+
+          {tenant.subscriptionStatus !== 'LIFETIME' && (
+            <button 
+              onClick={handleLifetime}
+              disabled={actionLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-semibold text-sm rounded-lg transition-colors disabled:opacity-50"
+            >
+              <Star className="w-4 h-4" /> Tornar Vitalício
+            </button>
+          )}
           
           {tenant.subscriptionStatus === 'SUSPENDED' ? (
             <button 

@@ -346,4 +346,20 @@ router.post('/communications', async (req, res) => {
   }
 });
 
+// 9. TORNAR VITALÍCIO
+router.post('/tenants/:id/lifetime', async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    const tenant = await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { subscriptionStatus: 'LIFETIME' }
+    });
+    const user = (req as any).user;
+    await logAudit(user.id, tenantId, 'PLAN_CHANGED', JSON.stringify({ newPlan: 'LIFETIME' }));
+    res.json(tenant);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao tornar loja vitalícia' });
+  }
+});
+
 export default router;
