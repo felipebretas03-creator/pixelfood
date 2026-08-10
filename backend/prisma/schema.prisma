@@ -46,6 +46,7 @@ model Tenant {
 
   setupCompletedAt DateTime?
   publishedAt      DateTime?
+  lifetimeExpiresAt DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?

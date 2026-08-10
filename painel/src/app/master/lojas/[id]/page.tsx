@@ -29,6 +29,7 @@ export default function LojaDetalhes() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("visao-geral");
   const [actionLoading, setActionLoading] = useState(false);
+  const [daysInput, setDaysInput] = useState('');
   
   // Custom Modal State
   const [modalState, setModalState] = useState<{
@@ -36,20 +37,27 @@ export default function LojaDetalhes() {
     title: string;
     description: string;
     confirmText: string;
-    onConfirm: () => void;
+    onConfirm: (days?: string) => void;
     isDestructive?: boolean;
+    showDaysInput?: boolean;
   }>({
     isOpen: false,
     title: '',
     description: '',
     confirmText: '',
     onConfirm: () => {},
+    isDestructive: false,
+    showDaysInput: false
   });
 
-  const openConfirmModal = (title: string, description: string, confirmText: string, onConfirm: () => void, isDestructive = false) => {
-    setModalState({ isOpen: true, title, description, confirmText, onConfirm, isDestructive });
+  const openConfirmModal = (title: string, description: string, confirmText: string, onConfirm: (days?: string) => void, isDestructive = false, showDaysInput = false) => {
+    setModalState({ isOpen: true, title, description, confirmText, onConfirm, isDestructive, showDaysInput });
+    setDaysInput('');
   };
-  const closeConfirmModal = () => setModalState(prev => ({ ...prev, isOpen: false }));
+  const closeConfirmModal = () => {
+    setModalState(prev => ({ ...prev, isOpen: false }));
+    setDaysInput('');
+  };
 
   useEffect(() => {
     fetchTenant();
@@ -95,14 +103,18 @@ export default function LojaDetalhes() {
 
   const handleLifetime = async () => {
     openConfirmModal(
-      'Tornar Vitalício',
-      'Tem certeza que deseja dar acesso vitalício a esta loja? Ela não será mais cobrada mensalmente.',
-      'Tornar Vitalício',
-      async () => {
+      'Acesso Liberado / Vitalício',
+      'Tem certeza que deseja dar acesso liberado a esta loja? Ela não será mais cobrada.',
+      'Liberar Acesso',
+      async (days?: string) => {
         closeConfirmModal();
         setActionLoading(true);
         try {
-          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/lifetime`, { method: 'POST' });
+          const body = days ? JSON.stringify({ days: parseInt(days) }) : undefined;
+          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/lifetime`, { 
+            method: 'POST',
+            body
+          });
           if (res.ok) {
             fetchTenant();
           } else {
@@ -114,7 +126,9 @@ export default function LojaDetalhes() {
         } finally {
           setActionLoading(false);
         }
-      }
+      },
+      false,
+      true
     );
   };
 
@@ -403,6 +417,22 @@ export default function LojaDetalhes() {
               </div>
               <h3 className="text-xl font-bold text-stone-900 mb-2">{modalState.title}</h3>
               <p className="text-stone-500 leading-relaxed">{modalState.description}</p>
+              
+              {modalState.showDaysInput && (
+                <div className="mt-5">
+                  <label className="block text-sm font-bold text-stone-700 mb-2">Duração (em dias)</label>
+                  <input 
+                    type="number" 
+                    value={daysInput}
+                    onChange={e => setDaysInput(e.target.value)}
+                    placeholder="Ex: 30 (deixe em branco para acesso vitalício)"
+                    className="w-full bg-stone-50 border border-stone-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-4 py-3 text-stone-700 font-medium transition-all"
+                  />
+                  <p className="text-xs text-stone-400 mt-2 font-medium">
+                    Se você preencher, o acesso será revogado automaticamente após os dias informados.
+                  </p>
+                </div>
+              )}
             </div>
             <div className="px-6 py-4 bg-stone-50 border-t border-stone-100 flex justify-end gap-3">
               <button 
@@ -412,7 +442,7 @@ export default function LojaDetalhes() {
                 Cancelar
               </button>
               <button 
-                onClick={modalState.onConfirm}
+                onClick={() => modalState.onConfirm(daysInput)}
                 className={`px-5 py-2.5 text-white font-bold rounded-xl shadow-sm transition-all hover:-translate-y-0.5 ${
                   modalState.isDestructive 
                     ? 'bg-red-600 hover:bg-red-700 hover:shadow-red-500/20' 

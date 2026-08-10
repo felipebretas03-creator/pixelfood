@@ -361,19 +361,36 @@ router.post('/communications', async (req, res) => {
   }
 });
 
-// 9. TORNAR VITALÍCIO
+// 9. TORNAR VITALÍCIO OU ACESSO LIBERADO POR DIAS
 router.post('/tenants/:id/lifetime', async (req, res) => {
   try {
     const tenantId = req.params.id;
+    const { days } = req.body || {};
+    
+    let lifetimeExpiresAt: Date | null = null;
+    if (days && !isNaN(parseInt(days))) {
+      lifetimeExpiresAt = new Date();
+      lifetimeExpiresAt.setDate(lifetimeExpiresAt.getDate() + parseInt(days));
+    }
+
     const tenant = await prisma.tenant.update({
       where: { id: tenantId },
-      data: { subscriptionStatus: 'LIFETIME' }
+      data: { 
+        subscriptionStatus: 'LIFETIME',
+        lifetimeExpiresAt
+      }
     });
+    
     const user = (req as any).user;
-    await logAudit(user.id, tenantId, 'PLAN_CHANGED', JSON.stringify({ newPlan: 'LIFETIME' }));
+    await logAudit('PLAN_CHANGED', user.id, tenantId, { 
+      newPlan: 'LIFETIME', 
+      days: days || 'infinity',
+      expiresAt: lifetimeExpiresAt 
+    });
+    
     res.json(tenant);
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao tornar loja vitalícia' });
+    res.status(500).json({ error: 'Erro ao liberar acesso da loja' });
   }
 });
 
