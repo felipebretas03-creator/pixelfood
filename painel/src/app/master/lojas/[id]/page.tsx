@@ -30,6 +30,7 @@ export default function LojaDetalhes() {
   const [activeTab, setActiveTab] = useState("visao-geral");
   const [actionLoading, setActionLoading] = useState(false);
   const [daysInput, setDaysInput] = useState('');
+  const [activity, setActivity] = useState<{ orders: any[], logs: any[] } | null>(null);
   
   // Custom Modal State
   const [modalState, setModalState] = useState<{
@@ -61,7 +62,17 @@ export default function LojaDetalhes() {
 
   useEffect(() => {
     fetchTenant();
+    fetchActivity();
   }, [id]);
+
+  const fetchActivity = async () => {
+    try {
+      const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/activity`);
+      if (res.ok) setActivity(await res.json());
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const fetchTenant = async () => {
     try {
@@ -473,8 +484,69 @@ export default function LojaDetalhes() {
         )}
 
         {activeTab === 'atividade' && (
-          <div className="text-center py-12 text-stone-500">
-            Aba de atividade em construção. Serão exibidos os últimos pedidos, atualizações de cardápio e logs.
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg text-stone-900 border-b border-stone-100 pb-2 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-stone-400" /> 
+                Últimas Ações (Logs)
+              </h3>
+              {!activity ? (
+                <div className="text-center py-8 text-stone-400 animate-pulse">Carregando atividades...</div>
+              ) : activity.logs.length === 0 ? (
+                <div className="text-center py-8 text-stone-500 text-sm">Nenhum log registrado recentemente.</div>
+              ) : (
+                <div className="space-y-3">
+                  {activity.logs.map((log: any) => (
+                    <div key={log.id} className="p-3 bg-stone-50 border border-stone-200 rounded-lg text-sm">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-bold text-stone-700 bg-stone-200 px-2 py-0.5 rounded text-xs">{log.action}</span>
+                        <span className="text-stone-400 text-xs">{new Date(log.createdAt).toLocaleString('pt-BR')}</span>
+                      </div>
+                      {log.metadata && (
+                        <div className="text-stone-500 mt-2 text-xs font-mono bg-white p-2 border border-stone-200 rounded overflow-x-auto">
+                          {log.metadata}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg text-stone-900 border-b border-stone-100 pb-2 flex items-center gap-2">
+                <Store className="w-5 h-5 text-stone-400" />
+                Últimos Pedidos
+              </h3>
+              {!activity ? (
+                <div className="text-center py-8 text-stone-400 animate-pulse">Carregando pedidos...</div>
+              ) : activity.orders.length === 0 ? (
+                <div className="text-center py-8 text-stone-500 text-sm">Nenhum pedido realizado recentemente.</div>
+              ) : (
+                <div className="space-y-3">
+                  {activity.orders.map((order: any) => (
+                    <div key={order.id} className="flex justify-between items-center p-3 border border-stone-200 rounded-lg bg-white hover:bg-stone-50 transition-colors">
+                      <div>
+                        <div className="font-bold text-stone-900">
+                          #{order.orderNumber} <span className="text-stone-400 font-normal ml-2">{order.customer?.name || 'Cliente'}</span>
+                        </div>
+                        <div className="text-xs text-stone-500 mt-1">
+                          {new Date(order.createdAt).toLocaleString('pt-BR')}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-brand-600">
+                          {new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(order.totalCents / 100)}
+                        </div>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 uppercase">
+                          {order.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

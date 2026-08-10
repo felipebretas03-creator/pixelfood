@@ -122,6 +122,29 @@ router.get('/tenants/:id', async (req, res) => {
   }
 });
 
+// 3.5 ATIVIDADE DA LOJA
+router.get('/tenants/:id/activity', async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    const orders = await prisma.order.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      include: { customer: true }
+    });
+    
+    const logs = await prisma.auditLog.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    });
+    
+    res.json({ orders, logs });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar atividade da loja' });
+  }
+});
+
 // 4. SUSPENDER LOJA
 router.post('/tenants/:id/suspend', async (req, res) => {
   try {
