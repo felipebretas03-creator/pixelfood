@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-import { Search, ArrowRight, MapPin, ChevronRight, Star, Clock, ShoppingBag, User, FileText, Ticket, Heart, CreditCard, Award, HelpCircle, Settings, LogOut, X, Bell } from "lucide-react";
+import { Search, ArrowRight, MapPin, ChevronRight, Star, Clock, ShoppingBag, User, FileText, Ticket, Heart, CreditCard, Award, HelpCircle, Settings, LogOut, X, Bell, Store } from "lucide-react";
 import { ProductModal } from "@/components/ProductModal";
 import { AddressModal } from "@/components/AddressModal";
 import { NotificationsModal } from "@/components/NotificationsModal";
@@ -37,22 +37,28 @@ export default function Home() {
 
   const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [tenantError, setTenantError] = useState(false);
 
   useEffect(() => {
     apiFetch('http://127.0.0.1:4000/api/settings')
-      .then(res => res.json())
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Tenant não encontrado');
+        return res.json();
+      })
       .then(data => {
+        if (data.error) throw new Error(data.error);
         setSettings(data);
         setIsLoading(false);
       })
       .catch((err) => {
         console.error(err);
+        setTenantError(true);
         setIsLoading(false);
       });
 
     apiFetch('http://127.0.0.1:4000/api/categories')
-      .then(res => res.json())
-      .then(data => setCategories(data))
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setCategories(Array.isArray(data) ? data : []))
       .catch(console.error);
   }, []);
 
@@ -60,10 +66,8 @@ export default function Home() {
 
   useEffect(() => {
     apiFetch('http://127.0.0.1:4000/api/products')
-      .then(res => res.json())
-      .then(data => {
-        setProducts(data);
-      })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setProducts(Array.isArray(data) ? data : []))
       .catch(console.error);
   }, []);
 
@@ -75,6 +79,21 @@ export default function Home() {
     return (
       <main className="flex-1 flex flex-col min-h-screen bg-white items-center justify-center">
         <div className="w-10 h-10 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin"></div>
+      </main>
+    );
+  }
+
+  if (tenantError) {
+    return (
+      <main className="flex-1 flex flex-col min-h-screen bg-white items-center justify-center text-center px-4">
+        <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mb-4">
+          <Store className="w-8 h-8 text-stone-400" />
+        </div>
+        <h1 className="text-2xl font-black text-stone-900 mb-2">Restaurante não encontrado</h1>
+        <p className="text-stone-500 max-w-sm mb-6">O endereço que você acessou não corresponde a nenhum restaurante ativo na nossa plataforma.</p>
+        <Link href="/" className="px-6 py-3 bg-brand-500 text-white font-bold rounded-xl hover:bg-brand-600 transition-colors">
+          Ir para Início
+        </Link>
       </main>
     );
   }
