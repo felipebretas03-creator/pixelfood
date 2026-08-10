@@ -387,6 +387,45 @@ export default function LojaDetalhes() {
         )}
 
       </div>
+
+      {/* Confirm Modal */}
+      {modalState.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${modalState.isDestructive ? 'bg-red-100 text-red-600' : 'bg-brand-100 text-brand-600'}`}>
+                  {modalState.isDestructive ? <AlertCircle className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
+                </div>
+                <button onClick={closeConfirmModal} className="text-stone-400 hover:text-stone-600 p-2 rounded-full hover:bg-stone-100 transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <h3 className="text-xl font-bold text-stone-900 mb-2">{modalState.title}</h3>
+              <p className="text-stone-500 leading-relaxed">{modalState.description}</p>
+            </div>
+            <div className="px-6 py-4 bg-stone-50 border-t border-stone-100 flex justify-end gap-3">
+              <button 
+                onClick={closeConfirmModal}
+                className="px-5 py-2.5 text-stone-600 font-semibold hover:bg-stone-200 rounded-xl transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={modalState.onConfirm}
+                className={`px-5 py-2.5 text-white font-bold rounded-xl shadow-sm transition-all hover:-translate-y-0.5 ${
+                  modalState.isDestructive 
+                    ? 'bg-red-600 hover:bg-red-700 hover:shadow-red-500/20' 
+                    : 'bg-brand-600 hover:bg-brand-700 hover:shadow-brand-500/20'
+                }`}
+              >
+                {modalState.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
