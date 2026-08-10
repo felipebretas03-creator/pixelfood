@@ -356,7 +356,51 @@ export default function LojaDetalhes() {
 
         {activeTab === 'assinatura' && (
           <div className="space-y-6">
-            {!sub ? (
+            {tenant.subscriptionStatus === 'LIFETIME' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg text-stone-900 border-b border-stone-100 pb-2">Plano Vigente</h3>
+                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-100 shadow-sm relative overflow-hidden">
+                    <div className="absolute -right-6 -top-6 text-indigo-500/10">
+                      <Star className="w-32 h-32" />
+                    </div>
+                    <div className="relative">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="text-sm font-bold text-indigo-600 uppercase tracking-widest">Acesso Especial</div>
+                        <span className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-indigo-100 text-indigo-700">Ativo</span>
+                      </div>
+                      <div className="text-3xl font-black text-stone-900 mb-2">Vitalício / Liberado</div>
+                      
+                      {tenant.lifetimeExpiresAt ? (() => {
+                        const daysLeft = Math.ceil((new Date(tenant.lifetimeExpiresAt).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+                        return (
+                          <div className="mt-6 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-indigo-100/50 flex justify-between items-center">
+                            <div>
+                              <div className="text-xs text-stone-500 font-bold uppercase tracking-wider mb-1">Validade Restante</div>
+                              <div className={`text-2xl font-black ${daysLeft <= 3 ? 'text-red-500' : 'text-indigo-600'}`}>
+                                {daysLeft > 0 ? `${daysLeft} dias` : 'Expirado'}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xs text-stone-500 font-bold uppercase tracking-wider mb-1">Data Exata</div>
+                              <div className="text-sm font-semibold text-stone-700">
+                                {new Date(tenant.lifetimeExpiresAt).toLocaleDateString('pt-BR')}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })() : (
+                        <div className="mt-6 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-indigo-100/50">
+                          <p className="text-sm text-stone-600 font-medium">
+                            Este acesso <strong className="text-indigo-600">não possui data de expiração</strong> e não gerará cobranças automáticas para esta loja.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : !sub ? (
               <p className="text-stone-500 text-center py-8">Nenhuma assinatura cadastrada para esta loja.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
