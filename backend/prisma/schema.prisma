@@ -535,3 +535,29 @@ model OrderPayment {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
+
+// ==========================================
+// P0.7 - PAINEL MASTER / AUDITORIA
+// ==========================================
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String?
+  tenantId    String?
+  action      String
+  metadata    String?  @db.Text // JSON stringified
+  requestId   String?
+  createdAt   DateTime @default(now())
+}
+
+model Communication {
+  id             String   @id @default(uuid())
+  title          String
+  message        String   @db.Text
+  targetAudience String   @default("ALL") // ALL, ACTIVE, TRIALING, PAST_DUE, SUSPENDED, CANCELED
+  channel        String   @default("EMAIL")
+  recipientCount Int      @default(0)
+  status         String   @default("SENT")
+  createdAt      DateTime @default(now())
+}
+

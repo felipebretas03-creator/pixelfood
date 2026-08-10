@@ -110,6 +110,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   if (!mounted || !isHydrated) return null;
   if (!isAuthenticated && pathname !== '/login' && pathname !== '/cadastro') return null;
 
+  // Se for painel master, o layout será delegado para app/master/layout.tsx
+  if (pathname?.startsWith('/master')) {
+    return <>{children}</>;
+  }
+
   return (
     <>
       {/* Top Navigation Bar */}
