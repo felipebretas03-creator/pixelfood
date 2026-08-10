@@ -16,7 +16,9 @@ import {
   Users,
   Activity,
   Shield,
-  Star
+  Star,
+  X,
+  AlertCircle
 } from "lucide-react";
 import Link from "next/link";
 
@@ -27,6 +29,27 @@ export default function LojaDetalhes() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("visao-geral");
   const [actionLoading, setActionLoading] = useState(false);
+  
+  // Custom Modal State
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    confirmText: string;
+    onConfirm: () => void;
+    isDestructive?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    confirmText: '',
+    onConfirm: () => {},
+  });
+
+  const openConfirmModal = (title: string, description: string, confirmText: string, onConfirm: () => void, isDestructive = false) => {
+    setModalState({ isOpen: true, title, description, confirmText, onConfirm, isDestructive });
+  };
+  const closeConfirmModal = () => setModalState(prev => ({ ...prev, isOpen: false }));
 
   useEffect(() => {
     fetchTenant();
@@ -44,54 +67,72 @@ export default function LojaDetalhes() {
   };
 
   const handleAction = async (action: 'suspend' | 'reactivate' | 'cancel') => {
-    if (!confirm(`Tem certeza que deseja ${action} esta loja?`)) return;
-    setActionLoading(true);
-    try {
-      const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/${action}`, { method: 'POST' });
-      if (res.ok) {
-        fetchTenant();
-      }
-    } catch (error) {
-      alert("Erro ao realizar ação.");
-    } finally {
-      setActionLoading(false);
-    }
+    const actionNames = { suspend: 'suspender', reactivate: 'reativar', cancel: 'cancelar' };
+    openConfirmModal(
+      `Confirmar Ação`,
+      `Tem certeza que deseja ${actionNames[action]} esta loja?`,
+      'Confirmar',
+      async () => {
+        closeConfirmModal();
+        setActionLoading(true);
+        try {
+          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/${action}`, { method: 'POST' });
+          if (res.ok) fetchTenant();
+        } catch (error) {
+          alert("Erro ao realizar ação.");
+        } finally {
+          setActionLoading(false);
+        }
+      },
+      action === 'cancel' || action === 'suspend'
+    );
   };
 
   const handleLifetime = async () => {
-    if (!confirm("Tem certeza que deseja dar acesso vitalício a esta loja? Ela não será mais cobrada mensalmente.")) return;
-    setActionLoading(true);
-    try {
-      const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/lifetime`, { method: 'POST' });
-      if (res.ok) {
-        fetchTenant();
+    openConfirmModal(
+      'Tornar Vitalício',
+      'Tem certeza que deseja dar acesso vitalício a esta loja? Ela não será mais cobrada mensalmente.',
+      'Tornar Vitalício',
+      async () => {
+        closeConfirmModal();
+        setActionLoading(true);
+        try {
+          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/lifetime`, { method: 'POST' });
+          if (res.ok) fetchTenant();
+        } catch (error) {
+          alert("Erro ao aplicar acesso vitalício.");
+        } finally {
+          setActionLoading(false);
+        }
       }
-    } catch (error) {
-      alert("Erro ao aplicar acesso vitalício.");
-    } finally {
-      setActionLoading(false);
-    }
+    );
   };
 
   const handleImpersonate = async () => {
-    if (!confirm("Você entrará no painel como administrador desta loja. Deseja continuar?")) return;
-    try {
-      const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/impersonate`, { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        // Replace current token with impersonated token
-        const authData = JSON.parse(localStorage.getItem('painel-auth-storage') || '{}');
-        if (authData.state) {
-          authData.state.token = data.token;
-          authData.state.tenant = data.tenant;
-          authData.state.user = { ...authData.state.user, role: 'OWNER' };
-          localStorage.setItem('painel-auth-storage', JSON.stringify(authData));
-          window.location.href = '/';
+    openConfirmModal(
+      'Entrar como Loja',
+      'Você entrará no painel como administrador desta loja. Deseja continuar?',
+      'Entrar Agora',
+      async () => {
+        closeConfirmModal();
+        try {
+          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/impersonate`, { method: 'POST' });
+          if (res.ok) {
+            const data = await res.json();
+            const authData = JSON.parse(localStorage.getItem('painel-auth-storage') || '{}');
+            if (authData.state) {
+              authData.state.token = data.token;
+              authData.state.tenant = data.tenant;
+              authData.state.user = { ...authData.state.user, role: 'OWNER' };
+              localStorage.setItem('painel-auth-storage', JSON.stringify(authData));
+              window.location.href = '/';
+            }
+          }
+        } catch (error) {
+          alert("Erro ao impersonar loja.");
         }
       }
-    } catch (error) {
-      alert("Erro ao impersonar loja.");
-    }
+    );
   };
 
   if (loading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin w-8 h-8 text-brand-500" /></div>;
