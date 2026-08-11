@@ -441,4 +441,63 @@ router.post('/tenants/:id/revoke-lifetime', async (req, res) => {
   }
 });
 
+// 11. LISTAR PLANOS
+router.get('/plans', async (req, res) => {
+  try {
+    const plans = await prisma.plan.findMany({ where: { isActive: true } });
+    res.json(plans);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar planos' });
+  }
+});
+
+// 12. CRIAR ASSINATURA MANUAL
+router.post('/tenants/:id/manual-subscription', async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    const { planId } = req.body;
+    
+    if (!planId) {
+      return res.status(400).json({ error: 'O ID do plano é obrigatório.' });
+    }
+
+    // Remover assinaturas anteriores, se houver
+    await prisma.subscription.deleteMany({
+      where: { tenantId }
+    });
+
+    // Criar nova assinatura
+    const now = new Date();
+    const currentPeriodEnd = new Date(now);
+    currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1); // 1 mes padrao, ou poderia ser null
+
+    const subscription = await prisma.subscription.create({
+      data: {
+        tenantId,
+        planId,
+        provider: 'MANUAL',
+        status: 'ACTIVE',
+        currentPeriodStart: now,
+        currentPeriodEnd: currentPeriodEnd
+      }
+    });
+
+    const tenant = await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { subscriptionStatus: 'ACTIVE', lifetimeExpiresAt: null }
+    });
+
+    const user = (req as any).user;
+    await logAudit('PLAN_CHANGED', user.id, tenantId, { 
+      newPlan: 'ACTIVE',
+      planId,
+      reason: 'Manual subscription created by master'
+    });
+    
+    res.json({ tenant, subscription });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao criar assinatura manual' });
+  }
+});
+
 export default router;

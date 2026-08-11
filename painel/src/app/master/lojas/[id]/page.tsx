@@ -73,7 +73,9 @@ export default function LojaDetalhes() {
   const [activeTab, setActiveTab] = useState("visao-geral");
   const [actionLoading, setActionLoading] = useState(false);
   const [daysInput, setDaysInput] = useState('');
+  const [planInput, setPlanInput] = useState('');
   const [activity, setActivity] = useState<{ orders: any[], logs: any[] } | null>(null);
+  const [plans, setPlans] = useState<any[]>([]);
   
   // Custom Modal State
   const [modalState, setModalState] = useState<{
@@ -81,9 +83,11 @@ export default function LojaDetalhes() {
     title: string;
     description: string;
     confirmText: string;
-    onConfirm: (days?: string) => void;
+    onConfirm: (data?: any) => void;
     isDestructive?: boolean;
     showDaysInput?: boolean;
+    showPlanSelect?: boolean;
+    plans?: any[];
   }>({
     isOpen: false,
     title: '',
@@ -91,22 +95,34 @@ export default function LojaDetalhes() {
     confirmText: '',
     onConfirm: () => {},
     isDestructive: false,
-    showDaysInput: false
+    showDaysInput: false,
+    showPlanSelect: false,
+    plans: []
   });
 
-  const openConfirmModal = (title: string, description: string, confirmText: string, onConfirm: (days?: string) => void, isDestructive = false, showDaysInput = false) => {
-    setModalState({ isOpen: true, title, description, confirmText, onConfirm, isDestructive, showDaysInput });
+  const openConfirmModal = (title: string, description: string, confirmText: string, onConfirm: (data?: any) => void, isDestructive = false, showDaysInput = false, showPlanSelect = false, plans: any[] = []) => {
+    setModalState({ isOpen: true, title, description, confirmText, onConfirm, isDestructive, showDaysInput, showPlanSelect, plans });
     setDaysInput('');
+    if (plans.length > 0) setPlanInput(plans[0].id);
   };
   const closeConfirmModal = () => {
     setModalState(prev => ({ ...prev, isOpen: false }));
     setDaysInput('');
+    setPlanInput('');
   };
 
   useEffect(() => {
     fetchTenant();
     fetchActivity();
+    fetchPlans();
   }, [id]);
+
+  const fetchPlans = async () => {
+    try {
+      const res = await apiFetch(`http://localhost:4000/api/master/plans`);
+      if (res.ok) setPlans(await res.json());
+    } catch (e) { console.error(e); }
+  };
 
   const fetchActivity = async () => {
     try {
@@ -209,6 +225,45 @@ export default function LojaDetalhes() {
         }
       },
       true // isDestructive
+    );
+  };
+
+  const handleManualSubscription = () => {
+    if (plans.length === 0) {
+      alert("Nenhum plano cadastrado no sistema.");
+      return;
+    }
+    openConfirmModal(
+      'Assinatura Manual',
+      'Selecione o plano que deseja atribuir manualmente para esta loja. Ela ficará ativa e você pode gerenciar a cobrança por fora.',
+      'Atribuir Plano',
+      async (planId?: string) => {
+        if (!planId) {
+          alert("Selecione um plano válido.");
+          return;
+        }
+        closeConfirmModal();
+        setActionLoading(true);
+        try {
+          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/manual-subscription`, {
+            method: 'POST',
+            body: JSON.stringify({ planId })
+          });
+          if (res.ok) fetchTenant();
+          else {
+            const err = await res.json().catch(() => ({}));
+            alert(err.error || "Erro ao atribuir assinatura manual na API.");
+          }
+        } catch (e: any) {
+          alert(e.message || "Erro de conexão.");
+        } finally {
+          setActionLoading(false);
+        }
+      },
+      false, // isDestructive
+      false, // showDaysInput
+      true,  // showPlanSelect
+      plans  // plans
     );
   };
 
@@ -455,7 +510,20 @@ export default function LojaDetalhes() {
                 </div>
               </div>
             ) : !sub ? (
-              <p className="text-stone-500 text-center py-8">Nenhuma assinatura cadastrada para esta loja.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg text-stone-900 border-b border-stone-100 pb-2">Plano Vigente</h3>
+                  <div className="bg-stone-50 rounded-xl p-6 border border-stone-200 shadow-sm flex flex-col justify-center items-center text-center">
+                    <p className="text-stone-500 mb-4 font-medium">Nenhuma assinatura cadastrada para esta loja.</p>
+                    <button 
+                      onClick={handleManualSubscription}
+                      className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-semibold transition-colors"
+                    >
+                      Adicionar Assinatura Manual
+                    </button>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
@@ -626,6 +694,21 @@ export default function LojaDetalhes() {
                   </p>
                 </div>
               )}
+
+              {modalState.showPlanSelect && (
+                <div className="mt-5">
+                  <label className="block text-sm font-bold text-stone-700 mb-2">Selecione o Plano</label>
+                  <select 
+                    value={planInput}
+                    onChange={e => setPlanInput(e.target.value)}
+                    className="w-full bg-stone-50 border border-stone-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-4 py-3 text-stone-700 font-medium transition-all"
+                  >
+                    {modalState.plans?.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} - {new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(p.priceCents/100)}/{p.billingCycle}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             <div className="px-6 py-4 bg-stone-50 border-t border-stone-100 flex justify-end gap-3">
               <button 
@@ -635,7 +718,7 @@ export default function LojaDetalhes() {
                 Cancelar
               </button>
               <button 
-                onClick={() => modalState.onConfirm(daysInput)}
+                onClick={() => modalState.onConfirm(modalState.showDaysInput ? daysInput : modalState.showPlanSelect ? planInput : undefined)}
                 className={`px-5 py-2.5 text-white font-bold rounded-xl shadow-sm transition-all hover:-translate-y-0.5 ${
                   modalState.isDestructive 
                     ? 'bg-red-600 hover:bg-red-700 hover:shadow-red-500/20' 
