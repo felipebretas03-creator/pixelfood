@@ -88,6 +88,7 @@ export default function LojaDetalhes() {
     showDaysInput?: boolean;
     showPlanSelect?: boolean;
     plans?: any[];
+    isAlertOnly?: boolean;
   }>({
     isOpen: false,
     title: '',
@@ -97,14 +98,24 @@ export default function LojaDetalhes() {
     isDestructive: false,
     showDaysInput: false,
     showPlanSelect: false,
-    plans: []
+    plans: [],
+    isAlertOnly: false
   });
 
   const openConfirmModal = (title: string, description: string, confirmText: string, onConfirm: (data?: any) => void, isDestructive = false, showDaysInput = false, showPlanSelect = false, plans: any[] = []) => {
-    setModalState({ isOpen: true, title, description, confirmText, onConfirm, isDestructive, showDaysInput, showPlanSelect, plans });
+    setModalState({ isOpen: true, title, description, confirmText, onConfirm, isDestructive, showDaysInput, showPlanSelect, plans, isAlertOnly: false });
     setDaysInput('');
     if (plans.length > 0) setPlanInput(plans[0].id);
   };
+
+  const openAlertModal = (title: string, description: string, isDestructive = false) => {
+    setModalState({ 
+      isOpen: true, title, description, confirmText: 'OK', 
+      onConfirm: () => closeConfirmModal(), 
+      isDestructive, showDaysInput: false, showPlanSelect: false, plans: [], isAlertOnly: true 
+    });
+  };
+
   const closeConfirmModal = () => {
     setModalState(prev => ({ ...prev, isOpen: false }));
     setDaysInput('');
@@ -159,10 +170,10 @@ export default function LojaDetalhes() {
             fetchTenant();
           } else {
             const err = await res.json().catch(() => ({}));
-            alert(err.error || "Erro ao realizar ação na API.");
+            openAlertModal("Ops!", err.error || "Erro ao realizar ação na API.", true);
           }
         } catch (error: any) {
-          alert(error.message || "Erro de conexão ao realizar ação.");
+          openAlertModal("Ops!", error.message || "Erro de conexão ao realizar ação.", true);
         } finally {
           setActionLoading(false);
         }
@@ -189,10 +200,10 @@ export default function LojaDetalhes() {
             fetchTenant();
           } else {
             const err = await res.json().catch(() => ({}));
-            alert(err.error || "Erro ao aplicar acesso vitalício na API.");
+            openAlertModal("Ops!", err.error || "Erro ao aplicar acesso vitalício na API.", true);
           }
         } catch (error: any) {
-          alert(error.message || "Erro de conexão ao aplicar acesso vitalício.");
+          openAlertModal("Ops!", error.message || "Erro de conexão ao aplicar acesso vitalício.", true);
         } finally {
           setActionLoading(false);
         }
@@ -216,10 +227,10 @@ export default function LojaDetalhes() {
             fetchTenant();
           } else {
             const err = await res.json().catch(() => ({}));
-            alert(err.error || "Erro ao revogar acesso na API.");
+            openAlertModal("Ops!", err.error || "Erro ao revogar acesso na API.", true);
           }
         } catch (error: any) {
-          alert(error.message || "Erro de conexão ao revogar acesso.");
+          openAlertModal("Ops!", error.message || "Erro de conexão ao revogar acesso.", true);
         } finally {
           setActionLoading(false);
         }
@@ -230,7 +241,7 @@ export default function LojaDetalhes() {
 
   const handleManualSubscription = () => {
     if (plans.length === 0) {
-      alert("Nenhum plano cadastrado no sistema.");
+      openAlertModal("Ops!", "Nenhum plano cadastrado no sistema.", true);
       return;
     }
     openConfirmModal(
@@ -239,7 +250,7 @@ export default function LojaDetalhes() {
       'Atribuir Plano',
       async (planId?: string) => {
         if (!planId) {
-          alert("Selecione um plano válido.");
+          openAlertModal("Ops!", "Selecione um plano válido.", true);
           return;
         }
         closeConfirmModal();
@@ -252,10 +263,10 @@ export default function LojaDetalhes() {
           if (res.ok) fetchTenant();
           else {
             const err = await res.json().catch(() => ({}));
-            alert(err.error || "Erro ao atribuir assinatura manual na API.");
+            openAlertModal("Ops!", err.error || "Erro ao atribuir assinatura manual na API.", true);
           }
         } catch (e: any) {
-          alert(e.message || "Erro de conexão.");
+          openAlertModal("Ops!", e.message || "Erro de conexão.", true);
         } finally {
           setActionLoading(false);
         }
@@ -288,11 +299,11 @@ export default function LojaDetalhes() {
             }
           } else {
             const err = await res.json().catch(() => ({}));
-            alert(err.error || "Erro ao impersonar loja na API.");
+            openAlertModal("Ops!", err.error || "Erro ao impersonar loja na API.", true);
           }
         } catch (error: any) {
-          alert(error.message || "Erro de conexão ao impersonar loja.");
-        }
+          openAlertModal("Ops!", error.message || "Erro de conexão ao impersonar loja.", true);
+        } finally { }
       }
     );
   };
@@ -711,12 +722,14 @@ export default function LojaDetalhes() {
               )}
             </div>
             <div className="px-6 py-4 bg-stone-50 border-t border-stone-100 flex justify-end gap-3">
-              <button 
-                onClick={closeConfirmModal}
-                className="px-5 py-2.5 text-stone-600 font-semibold hover:bg-stone-200 rounded-xl transition-colors"
-              >
-                Cancelar
-              </button>
+              {!modalState.isAlertOnly && (
+                <button 
+                  onClick={closeConfirmModal}
+                  className="px-5 py-2.5 text-stone-600 font-semibold hover:bg-stone-200 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+              )}
               <button 
                 onClick={() => modalState.onConfirm(modalState.showDaysInput ? daysInput : modalState.showPlanSelect ? planInput : undefined)}
                 className={`px-5 py-2.5 text-white font-bold rounded-xl shadow-sm transition-all hover:-translate-y-0.5 ${
