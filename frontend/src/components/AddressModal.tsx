@@ -44,7 +44,7 @@ export function AddressModal({ isOpen, onClose }: AddressModalProps) {
   const fetchAddresses = async () => {
     setLoadingAddresses(true);
     try {
-      const res = await apiFetch('http://127.0.0.1:4000/api/customer/addresses');
+      const res = await apiFetch('/api/customer/addresses');
       const data = await res.json();
       if (Array.isArray(data)) {
         setSavedAddresses(data);
@@ -124,7 +124,7 @@ export function AddressModal({ isOpen, onClose }: AddressModalProps) {
     if (!isAuthenticated) return;
     setSavingAddress(true);
     try {
-      await apiFetch('http://127.0.0.1:4000/api/customer/addresses', {
+      await apiFetch('/api/customer/addresses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(addressData)

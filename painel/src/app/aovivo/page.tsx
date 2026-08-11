@@ -11,7 +11,7 @@ export default function AoVivoPage() {
 
   useEffect(() => {
     // 1. Fetch initial values
-    apiFetch('http://localhost:4000/api/orders')
+    apiFetch('/api/orders')
       .then(res => res.json())
       .then((data: any[]) => {
         setPedidosTotais(data.length);
@@ -25,7 +25,7 @@ export default function AoVivoPage() {
     let isMounted = true;
     import('socket.io-client').then(({ io }) => {
       if (!isMounted) return;
-      socket = io('http://localhost:4000');
+      socket = io('');
       socket.on('new_order', (dbOrder: any) => {
         setFaturamento(prev => prev + dbOrder.total);
         setPedidosTotais(prev => prev + 1);

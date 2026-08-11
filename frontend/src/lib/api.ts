@@ -1,7 +1,13 @@
 export const apiFetch = async (url: string, options: RequestInit = {}) => {
   const backendBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000';
-  let targetUrl = url.replace('http://127.0.0.1:4000', backendBase).replace('http://localhost:4000', backendBase);
+  let targetUrl = url;
   
+  if (targetUrl.startsWith('/api')) {
+    targetUrl = `${backendBase}${targetUrl}`;
+  } else if (targetUrl.includes('http://127.0.0.1:4000') || targetUrl.includes('http://localhost:4000')) {
+    targetUrl = targetUrl.replace('http://127.0.0.1:4000', backendBase).replace('http://localhost:4000', backendBase);
+  }
+
   if (targetUrl.startsWith(backendBase)) {
     let slug = process.env.NEXT_PUBLIC_RESTAURANT_SLUG;
     if (!slug && typeof window !== 'undefined') {

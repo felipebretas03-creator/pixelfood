@@ -60,7 +60,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   // Fetch initial store settings
   useEffect(() => {
     if (isAuthenticated && isHydrated) {
-      apiFetch('http://localhost:4000/api/settings')
+      apiFetch('/api/settings')
         .then(res => res.json())
         .then(data => {
           if (data && typeof data.isOpen === 'boolean') {
@@ -75,7 +75,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     const newState = !isStoreOpen;
     setIsStoreOpen(newState); // optimistic update
     try {
-      await apiFetch('http://localhost:4000/api/settings', {
+      await apiFetch('/api/settings', {
         method: 'PUT',
         body: JSON.stringify({ isOpen: newState })
       });

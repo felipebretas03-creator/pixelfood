@@ -8,7 +8,7 @@ export default function ClientesPage() {
   const [customers, setCustomers] = useState<any[]>([]);
 
   useEffect(() => {
-    apiFetch('http://localhost:4000/api/customers')
+    apiFetch('/api/customers')
       .then(res => res.json())
       .then(data => setCustomers(data))
       .catch(console.error);

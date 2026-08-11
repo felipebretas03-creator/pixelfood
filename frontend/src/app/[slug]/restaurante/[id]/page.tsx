@@ -20,7 +20,7 @@ export default function RestaurantPage(props: { params: Promise<{ id: string }> 
   const [product, setProduct] = useState<any>(null);
 
   React.useEffect(() => {
-    apiFetch(`http://127.0.0.1:4000/api/products/${id}`)
+    apiFetch(`/api/products/${id}`)
       .then(res => res.json())
       .then(data => {
         setProduct({

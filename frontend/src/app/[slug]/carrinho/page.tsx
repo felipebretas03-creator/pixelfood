@@ -46,8 +46,8 @@ export default function CarrinhoPage() {
 
   useEffect(() => {
     Promise.all([
-      apiFetch('http://127.0.0.1:4000/api/settings').then(res => res.json()),
-      apiFetch('http://127.0.0.1:4000/api/neighborhoods').then(res => res.json()).catch(() => [])
+      apiFetch('/api/settings').then(res => res.json()),
+      apiFetch('/api/neighborhoods').then(res => res.json()).catch(() => [])
     ]).then(([settingsData, neighborhoodsData]) => {
       if (settingsData) {
         setDeliverySettings(settingsData);
@@ -109,7 +109,7 @@ export default function CarrinhoPage() {
     setCouponError('');
     if (!couponCode) return;
     try {
-      const res = await apiFetch('http://127.0.0.1:4000/api/orders/validate-coupon', {
+      const res = await apiFetch('/api/orders/validate-coupon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: couponCode })
@@ -232,7 +232,7 @@ export default function CarrinhoPage() {
     }
 
     try {
-      const endpoint = paymentMethod === 'PIX' ? 'http://127.0.0.1:4000/api/checkout/pix' : 'http://127.0.0.1:4000/api/orders';
+      const endpoint = paymentMethod === 'PIX' ? '/api/checkout/pix' : '/api/orders';
       const res = await apiFetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -252,7 +252,7 @@ export default function CarrinhoPage() {
         // Start polling order status
         const interval = setInterval(async () => {
           try {
-            const checkRes = await apiFetch(`http://127.0.0.1:4000/api/orders/${responseData.order.id}`);
+            const checkRes = await apiFetch(`/api/orders/${responseData.order.id}`);
             const checkData = await checkRes.json();
             if (checkData.status !== 'PAYMENT_PENDING' && checkData.status !== 'CANCELLED') {
               clearInterval(interval);
@@ -301,7 +301,7 @@ export default function CarrinhoPage() {
       };
 
       try {
-        const res = await apiFetch('http://127.0.0.1:4000/api/checkout/card', {
+        const res = await apiFetch('/api/checkout/card', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(orderData)
@@ -432,7 +432,7 @@ export default function CarrinhoPage() {
           onBlur={async () => {
             if (isAuthenticated && userPhone) {
               try {
-                await apiFetch('http://127.0.0.1:4000/api/customer/profile', {
+                await apiFetch('/api/customer/profile', {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ phone: userPhone })

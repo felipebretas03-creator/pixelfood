@@ -130,14 +130,14 @@ export default function LojaDetalhes() {
 
   const fetchPlans = async () => {
     try {
-      const res = await apiFetch(`http://localhost:4000/api/master/plans`);
+      const res = await apiFetch(`/api/master/plans`);
       if (res.ok) setPlans(await res.json());
     } catch (e) { console.error(e); }
   };
 
   const fetchActivity = async () => {
     try {
-      const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/activity`);
+      const res = await apiFetch(`/api/master/tenants/${id}/activity`);
       if (res.ok) setActivity(await res.json());
     } catch (error) {
       console.error(error);
@@ -146,7 +146,7 @@ export default function LojaDetalhes() {
 
   const fetchTenant = async () => {
     try {
-      const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}`);
+      const res = await apiFetch(`/api/master/tenants/${id}`);
       if (res.ok) setTenant(await res.json());
     } catch (error) {
       console.error(error);
@@ -165,7 +165,7 @@ export default function LojaDetalhes() {
         closeConfirmModal();
         setActionLoading(true);
         try {
-          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/${action}`, { method: 'POST' });
+          const res = await apiFetch(`/api/master/tenants/${id}/${action}`, { method: 'POST' });
           if (res.ok) {
             fetchTenant();
           } else {
@@ -192,7 +192,7 @@ export default function LojaDetalhes() {
         setActionLoading(true);
         try {
           const body = days ? JSON.stringify({ days: parseInt(days) }) : undefined;
-          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/lifetime`, { 
+          const res = await apiFetch(`/api/master/tenants/${id}/lifetime`, { 
             method: 'POST',
             body
           });
@@ -222,7 +222,7 @@ export default function LojaDetalhes() {
         closeConfirmModal();
         setActionLoading(true);
         try {
-          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/revoke-lifetime`, { method: 'POST' });
+          const res = await apiFetch(`/api/master/tenants/${id}/revoke-lifetime`, { method: 'POST' });
           if (res.ok) {
             fetchTenant();
           } else {
@@ -256,7 +256,7 @@ export default function LojaDetalhes() {
         closeConfirmModal();
         setActionLoading(true);
         try {
-          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/manual-subscription`, {
+          const res = await apiFetch(`/api/master/tenants/${id}/manual-subscription`, {
             method: 'POST',
             body: JSON.stringify({ planId })
           });
@@ -286,7 +286,7 @@ export default function LojaDetalhes() {
       async () => {
         closeConfirmModal();
         try {
-          const res = await apiFetch(`http://localhost:4000/api/master/tenants/${id}/impersonate`, { method: 'POST' });
+          const res = await apiFetch(`/api/master/tenants/${id}/impersonate`, { method: 'POST' });
           if (res.ok) {
             const data = await res.json();
             const authData = JSON.parse(localStorage.getItem('painel-auth-storage') || '{}');

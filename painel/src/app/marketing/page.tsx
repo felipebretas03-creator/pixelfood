@@ -8,8 +8,8 @@ export default function MarketingPage() {
   const [loyalty, setLoyalty] = useState({ active: false, pointsPerReal: 1, pointsToReward: 100, rewardValue: 15, rewardType: 'DISCOUNT', rewardText: '' });
 
   useEffect(() => {
-    apiFetch('http://localhost:4000/api/coupons').then(res => res.json()).then(setCoupons).catch(console.error);
-    apiFetch('http://localhost:4000/api/loyalty').then(res => res.json()).then(setLoyalty).catch(console.error);
+    apiFetch('/api/coupons').then(res => res.json()).then(setCoupons).catch(console.error);
+    apiFetch('/api/loyalty').then(res => res.json()).then(setLoyalty).catch(console.error);
   }, []);
 
   // Coupon Modal State
@@ -19,7 +19,7 @@ export default function MarketingPage() {
 
   const toggleStatus = async (id: string, currentActive: boolean) => {
     try {
-      const res = await apiFetch(`http://localhost:4000/api/coupons/${id}/status`, {
+      const res = await apiFetch(`/api/coupons/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !currentActive })
@@ -32,7 +32,7 @@ export default function MarketingPage() {
   const confirmDelete = async () => {
     if (!couponToDelete) return;
     try {
-      await apiFetch(`http://localhost:4000/api/coupons/${couponToDelete}`, { method: 'DELETE' });
+      await apiFetch(`/api/coupons/${couponToDelete}`, { method: 'DELETE' });
       setCoupons(prev => prev.filter(c => c.id !== couponToDelete));
       setCouponToDelete(null);
     } catch (e) { console.error(e); }
@@ -61,7 +61,7 @@ export default function MarketingPage() {
     };
 
     try {
-      const res = await apiFetch('http://localhost:4000/api/coupons', {
+      const res = await apiFetch('/api/coupons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCouponPayload)
@@ -78,7 +78,7 @@ export default function MarketingPage() {
   const saveLoyalty = async (newLoyalty: any) => {
     setLoyalty(newLoyalty);
     try {
-      await apiFetch('http://localhost:4000/api/loyalty', {
+      await apiFetch('/api/loyalty', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newLoyalty)

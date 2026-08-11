@@ -31,7 +31,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await apiFetch("http://127.0.0.1:4000/api/auth/customer/login", {
+      const res = await apiFetch("/api/auth/customer/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })

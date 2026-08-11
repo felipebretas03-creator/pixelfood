@@ -71,7 +71,7 @@ export default function PedidosKanban() {
 
   useEffect(() => {
     // 0. Fetch Settings for Store Name
-    apiFetch('http://localhost:4000/api/settings')
+    apiFetch('/api/settings')
       .then(res => res.json())
       .then(data => {
         if (data && data.storeName) {
@@ -81,7 +81,7 @@ export default function PedidosKanban() {
       .catch(console.error);
 
     // 1. Fetch initial orders
-    apiFetch('http://localhost:4000/api/orders')
+    apiFetch('/api/orders')
       .then(res => res.json())
       .then((data: any[]) => {
         const formatted = data.map(dbOrder => ({
@@ -115,7 +115,7 @@ export default function PedidosKanban() {
     let isMounted = true;
     import('socket.io-client').then(({ io }) => {
       if (!isMounted) return;
-      socket = io('http://localhost:4000');
+      socket = io('');
       socket.on('new_order', (dbOrder: any) => {
         const newOrder = {
           id: dbOrder.id,
@@ -222,7 +222,7 @@ export default function PedidosKanban() {
       setDraggedOrderId(null);
 
       try {
-        await apiFetch(`http://localhost:4000/api/orders/${orderId}/status`, {
+        await apiFetch(`/api/orders/${orderId}/status`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: mapFrontendToDb(newStatus) })
@@ -243,7 +243,7 @@ export default function PedidosKanban() {
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: nextStatus } : o));
 
       try {
-        await apiFetch(`http://localhost:4000/api/orders/${orderId}/status`, {
+        await apiFetch(`/api/orders/${orderId}/status`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: mapFrontendToDb(nextStatus) })

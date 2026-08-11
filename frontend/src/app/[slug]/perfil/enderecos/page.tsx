@@ -24,7 +24,7 @@ export default function EnderecosPage() {
   const fetchAddresses = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch('http://127.0.0.1:4000/api/customer/addresses');
+      const res = await apiFetch('/api/customer/addresses');
       const data = await res.json();
       if (Array.isArray(data)) {
         setEnderecos(data);
@@ -53,7 +53,7 @@ export default function EnderecosPage() {
   const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja remover este endereço?")) {
       try {
-        await apiFetch(`http://127.0.0.1:4000/api/customer/addresses/${id}`, { method: 'DELETE' });
+        await apiFetch(`/api/customer/addresses/${id}`, { method: 'DELETE' });
         setEnderecos(enderecos.filter(e => e.id !== id));
       } catch (e) {
         console.error("Erro ao deletar");

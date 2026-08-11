@@ -42,7 +42,7 @@ export default function MeusDadosPage() {
       setStorePhone(phone);
       try {
         await import('@/lib/api').then(({ apiFetch }) => {
-          apiFetch('http://127.0.0.1:4000/api/customer/profile', {
+          apiFetch('/api/customer/profile', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone })

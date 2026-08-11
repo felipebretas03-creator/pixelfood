@@ -11,7 +11,7 @@ export default async function SlugLayout({
   const resolvedParams = await params;
   let settings = null;
   try {
-    const backendBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000';
+    const backendBase = process.env.NEXT_PUBLIC_API_URL || '';
     const res = await fetch(`${backendBase}/api/settings`, { 
       cache: 'no-store',
       headers: { 'x-restaurant-slug': resolvedParams.slug }

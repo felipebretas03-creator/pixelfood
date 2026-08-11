@@ -31,7 +31,7 @@ export default function MasterDashboard() {
 
   const fetchDashboard = async () => {
     try {
-      const res = await apiFetch('http://localhost:4000/api/master/dashboard');
+      const res = await apiFetch('/api/master/dashboard');
       if (res.ok) {
         const json = await res.json();
         setData(json);

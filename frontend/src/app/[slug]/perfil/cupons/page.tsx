@@ -19,7 +19,7 @@ export default function CuponsPage() {
 
   useEffect(() => {
     setMounted(true);
-    apiFetch('http://127.0.0.1:4000/api/coupons')
+    apiFetch('/api/coupons')
       .then(res => res.json())
       .then(data => {
         setCoupons(Array.isArray(data) ? data : []);

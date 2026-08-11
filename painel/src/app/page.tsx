@@ -30,7 +30,7 @@ export default function DashboardPage() {
   }, [tenant, router]);
 
   const fetchDashboard = () => {
-    apiFetch('http://localhost:4000/api/dashboard')
+    apiFetch('/api/dashboard')
       .then(res => res.json())
       .then(json => {
         if (json.error) {
@@ -49,7 +49,7 @@ export default function DashboardPage() {
     let isMounted = true;
     import('socket.io-client').then(({ io }) => {
       if (!isMounted) return;
-      socket = io('http://localhost:4000');
+      socket = io('');
       socket.on('new_order', () => {
         // Play notification sound
         try {
@@ -80,13 +80,13 @@ export default function DashboardPage() {
   const handleCloseRegister = async () => {
     setIsClosing(true);
     try {
-      const response = await apiFetch('http://localhost:4000/api/dashboard/fechamento');
+      const response = await apiFetch('/api/dashboard/fechamento');
       const json = await response.json();
       
       // Busca o nome do restaurante atual para o cabeçalho do cupom
       let storeName = 'Restaurante';
       try {
-        const settingsRes = await apiFetch('http://localhost:4000/api/settings');
+        const settingsRes = await apiFetch('/api/settings');
         const settingsJson = await settingsRes.json();
         if (settingsJson && settingsJson.storeName) storeName = settingsJson.storeName;
       } catch(e) {}

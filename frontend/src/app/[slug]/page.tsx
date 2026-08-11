@@ -40,7 +40,7 @@ export default function Home() {
   const [tenantError, setTenantError] = useState(false);
 
   useEffect(() => {
-    apiFetch('http://127.0.0.1:4000/api/settings')
+    apiFetch('/api/settings')
       .then(async (res) => {
         if (!res.ok) throw new Error('Tenant não encontrado');
         return res.json();
@@ -56,7 +56,7 @@ export default function Home() {
         setIsLoading(false);
       });
 
-    apiFetch('http://127.0.0.1:4000/api/categories')
+    apiFetch('/api/categories')
       .then(res => res.ok ? res.json() : [])
       .then(data => setCategories(Array.isArray(data) ? data : []))
       .catch(console.error);
@@ -65,7 +65,7 @@ export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    apiFetch('http://127.0.0.1:4000/api/products')
+    apiFetch('/api/products')
       .then(res => res.ok ? res.json() : [])
       .then(data => setProducts(Array.isArray(data) ? data : []))
       .catch(console.error);

@@ -28,8 +28,8 @@ export default function FidelidadePage() {
     const fetchData = async () => {
       try {
         const [loyaltyRes, customerRes] = await Promise.all([
-          apiFetch('http://127.0.0.1:4000/api/loyalty'),
-          isAuthenticated && userId ? apiFetch(`http://127.0.0.1:4000/api/customers/${userId}`) : Promise.resolve(null)
+          apiFetch('/api/loyalty'),
+          isAuthenticated && userId ? apiFetch(`/api/customers/${userId}`) : Promise.resolve(null)
         ]);
 
         if (loyaltyRes.ok) {

@@ -19,7 +19,7 @@ export default function CadastroPage() {
     setIsLoading(true);
     setError("");
     try {
-      const backendBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const backendBase = process.env.NEXT_PUBLIC_API_URL || "";
       const res = await fetch(`${backendBase}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

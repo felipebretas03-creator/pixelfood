@@ -1,7 +1,13 @@
 export const apiFetch = async (url: string, options: RequestInit = {}) => {
   const backendBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-  let targetUrl = url.replace('http://localhost:4000', backendBase).replace('http://127.0.0.1:4000', backendBase);
+  let targetUrl = url;
   
+  if (targetUrl.startsWith('/api')) {
+    targetUrl = `${backendBase}${targetUrl}`;
+  } else if (targetUrl.includes('http://localhost:4000') || targetUrl.includes('http://127.0.0.1:4000')) {
+    targetUrl = targetUrl.replace('http://localhost:4000', backendBase).replace('http://127.0.0.1:4000', backendBase);
+  }
+
   let tenantId = '';
   let token = '';
   try {

@@ -66,7 +66,7 @@ export default function CardapioPage() {
 
   const fetchProducts = async () => {
     try {
-      const res = await apiFetch('http://localhost:4000/api/products');
+      const res = await apiFetch('/api/products');
       const data = await res.json();
       setProducts(data);
     } catch (e) {
@@ -76,7 +76,7 @@ export default function CardapioPage() {
 
   const fetchCategories = async () => {
     try {
-      const res = await apiFetch('http://localhost:4000/api/categories');
+      const res = await apiFetch('/api/categories');
       const data = await res.json();
       setCategories(data);
       if (data.length > 0 && !formData.category) {
@@ -111,7 +111,7 @@ export default function CardapioPage() {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p));
     
     try {
-      await apiFetch(`http://localhost:4000/api/products/${id}`, {
+      await apiFetch(`/api/products/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !product.active })
@@ -129,7 +129,7 @@ export default function CardapioPage() {
   const executeDelete = async () => {
     if (deleteConfirmId) {
       try {
-        await apiFetch(`http://localhost:4000/api/products/${deleteConfirmId}`, {
+        await apiFetch(`/api/products/${deleteConfirmId}`, {
           method: 'DELETE'
         });
         setProducts(prev => prev.filter(p => p.id !== deleteConfirmId));
@@ -188,13 +188,13 @@ export default function CardapioPage() {
 
     try {
       if (editingProduct) {
-        await apiFetch(`http://localhost:4000/api/products/${editingProduct.id}`, {
+        await apiFetch(`/api/products/${editingProduct.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
       } else {
-        await apiFetch('http://localhost:4000/api/products', {
+        await apiFetch('/api/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...payload, active: true })
@@ -636,7 +636,7 @@ export default function CardapioPage() {
               e.preventDefault();
               if (newCategoryName.trim()) {
                 try {
-                  const res = await apiFetch('http://localhost:4000/api/categories', {
+                  const res = await apiFetch('/api/categories', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 

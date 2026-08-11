@@ -52,7 +52,7 @@ export const useOrderStore = create<OrderState>()(
       })),
       fetchOrders: async () => {
         try {
-          const response = await apiFetch('http://127.0.0.1:4000/api/customer/orders');
+          const response = await apiFetch('/api/customer/orders');
           if (response.ok) {
             const data = await response.json();
             set({ orders: data });

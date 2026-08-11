@@ -43,7 +43,7 @@ export default function ConfiguracoesPage() {
   };
 
   useEffect(() => {
-    apiFetch('http://localhost:4000/api/settings')
+    apiFetch('/api/settings')
       .then(res => res.json())
       .then(data => {
         if (data) {
@@ -65,7 +65,7 @@ export default function ConfiguracoesPage() {
       })
       .catch(console.error);
 
-    apiFetch('http://localhost:4000/api/neighborhoods')
+    apiFetch('/api/neighborhoods')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -82,7 +82,7 @@ export default function ConfiguracoesPage() {
     setIsSaved(false);
     
     try {
-      await apiFetch('http://localhost:4000/api/settings', {
+      await apiFetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -114,7 +114,7 @@ export default function ConfiguracoesPage() {
     setIsOpen(newStatus); // Optimistic update
     
     try {
-      await apiFetch('http://localhost:4000/api/settings', {
+      await apiFetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -135,7 +135,7 @@ export default function ConfiguracoesPage() {
   const handleAddNeighborhood = async () => {
     if (!newCity || !newFee) return alert('Preencha a cidade e o valor do frete');
     try {
-      const res = await apiFetch('http://localhost:4000/api/neighborhoods', {
+      const res = await apiFetch('/api/neighborhoods', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ city: newCity, neighborhood: newNeighborhood, fee: newFee })
@@ -155,7 +155,7 @@ export default function ConfiguracoesPage() {
 
   const handleDeleteNeighborhood = async (id: string) => {
     try {
-      const res = await apiFetch(`http://localhost:4000/api/neighborhoods/${id}`, { method: 'DELETE' });
+      const res = await apiFetch(`/api/neighborhoods/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setNeighborhoods(neighborhoods.filter(n => n.id !== id));
       }
@@ -182,7 +182,7 @@ export default function ConfiguracoesPage() {
     }
 
     try {
-      const res = await fetch('http://localhost:4000/api/settings/logo', {
+      const res = await fetch('/api/settings/logo', {
         method: 'POST',
         headers: {
           'x-tenant-id': tenantId
@@ -220,7 +220,7 @@ export default function ConfiguracoesPage() {
     }
 
     try {
-      const res = await fetch('http://localhost:4000/api/settings/banner', {
+      const res = await fetch('/api/settings/banner', {
         method: 'POST',
         headers: {
           'x-tenant-id': tenantId

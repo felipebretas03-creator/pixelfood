@@ -25,7 +25,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
   const address = useUserStore(state => state.address);
 
   useEffect(() => {
-    apiFetch(`http://127.0.0.1:4000/api/orders/${resolvedParams.id}`)
+    apiFetch(`/api/orders/${resolvedParams.id}`)
       .then(res => res.json())
       .then(data => {
         if (data && !data.error) {
@@ -54,7 +54,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
   useEffect(() => {
     let socket: any;
     import('socket.io-client').then(({ io }) => {
-      socket = io('http://127.0.0.1:4000');
+      socket = io('');
       socket.on('order_status_updated', (dbOrder: any) => {
         if (dbOrder.id === resolvedParams.id) {
           setOrder((prev: any) => prev ? { ...prev, status: dbOrder.status } : null);
