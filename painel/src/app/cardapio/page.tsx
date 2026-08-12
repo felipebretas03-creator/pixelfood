@@ -20,10 +20,11 @@ interface Product {
   id: string;
   name: string;
   description?: string;
-  category: string;
+  categoryId: string;
+  category?: { name: string };
   price: number;
   active: boolean;
-  image: string;
+  imageUrl: string;
   modifiers?: ProductModifierGroup[];
 }
 
@@ -55,9 +56,9 @@ export default function CardapioPage() {
   const [formData, setFormData] = useState({ 
     name: '', 
     description: '',
-    category: 'Hambúrguer', 
+    categoryId: '', 
     price: '', 
-    image: '',
+    imageUrl: '',
     modifiers: [] as ProductModifierGroup[]
   });
 
@@ -79,8 +80,8 @@ export default function CardapioPage() {
       const res = await apiFetch('/api/categories');
       const data = await res.json();
       setCategories(data);
-      if (data.length > 0 && !formData.category) {
-        setFormData(prev => ({ ...prev, category: data[0].name }));
+      if (data.length > 0 && !formData.categoryId) {
+        setFormData(prev => ({ ...prev, categoryId: data[0].id }));
       }
     } catch (e) {
       console.error(e);
@@ -97,7 +98,7 @@ export default function CardapioPage() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, image: reader.result as string }));
+        setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
       };
       reader.readAsDataURL(file);
     }
@@ -146,14 +147,14 @@ export default function CardapioPage() {
       setFormData({
         name: product.name,
         description: product.description || '',
-        category: product.category,
+        categoryId: product.categoryId,
         price: product.price.toString(),
-        image: product.image,
+        imageUrl: product.imageUrl || '',
         modifiers: product.modifiers ? JSON.parse(JSON.stringify(product.modifiers)) : []
       });
     } else {
       setEditingProduct(null);
-      setFormData({ name: '', description: '', category: categories.length > 0 ? categories[0].name : '', price: '', image: '', modifiers: [] });
+      setFormData({ name: '', description: '', categoryId: categories.length > 0 ? categories[0].id : '', price: '', imageUrl: '', modifiers: [] });
     }
     setActiveTab('detalhes');
     setIsModalOpen(true);
@@ -172,9 +173,9 @@ export default function CardapioPage() {
 
     const payload = {
       name: formData.name,
-      category: formData.category,
+      categoryId: formData.categoryId,
       price: priceNumber,
-      image: formData.image || 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=150',
+      imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=150',
       modifiers: formData.modifiers.map(m => ({
         name: m.name,
         min: m.min,
@@ -250,7 +251,7 @@ export default function CardapioPage() {
   // -------------------------
 
   const filteredProducts = products.filter(p => {
-    if (activeCategory !== 'Todos' && p.category !== activeCategory) return false;
+    if (activeCategory !== 'Todos' && p.category?.name !== activeCategory) return false;
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -332,10 +333,10 @@ export default function CardapioPage() {
               {filteredProducts.map(prod => (
                 <tr key={prod.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
                   <td className="p-4">
-                    <img src={prod.image} alt={prod.name} className="w-12 h-12 rounded-xl object-cover shadow-sm" />
+                    <img src={prod.imageUrl || 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=150'} alt={prod.name} className="w-12 h-12 rounded-xl object-cover shadow-sm" />
                   </td>
                   <td className="p-4 font-bold text-stone-900">{prod.name}</td>
-                  <td className="p-4 text-stone-500 text-sm font-medium">{prod.category}</td>
+                  <td className="p-4 text-stone-500 text-sm font-medium">{prod.category?.name}</td>
                   <td className="p-4 font-bold text-stone-900">
                     R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(prod.price)}
                   </td>
@@ -434,12 +435,12 @@ export default function CardapioPage() {
                     <div>
                       <label className="block text-sm font-bold text-stone-700 mb-1.5">Categoria</label>
                       <select 
-                        value={formData.category}
-                        onChange={(e) => setFormData({...formData, category: e.target.value})}
+                        value={formData.categoryId}
+                        onChange={(e) => setFormData({...formData, categoryId: e.target.value})}
                         className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-brand-500 focus:bg-white transition-all appearance-none cursor-pointer"
                       >
                         {categories.map(c => (
-                          <option key={c.id} value={c.name}>{c.name}</option>
+                          <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
                       </select>
                     </div>
@@ -471,8 +472,8 @@ export default function CardapioPage() {
                   <div>
                     <label className="block text-sm font-bold text-stone-700 mb-2">Foto do Produto</label>
                     <div className="flex items-center gap-4">
-                      {formData.image ? (
-                        <img src={formData.image} alt="Preview" className="w-16 h-16 rounded-2xl object-cover shadow-sm border border-stone-200" />
+                      {formData.imageUrl ? (
+                        <img src={formData.imageUrl} alt="Preview" className="w-16 h-16 rounded-2xl object-cover shadow-sm border border-stone-200" />
                       ) : (
                         <div className="w-16 h-16 bg-stone-50 border-2 border-dashed border-stone-300 rounded-2xl flex items-center justify-center">
                           <ImageIcon className="w-6 h-6 text-stone-400" />

@@ -691,10 +691,12 @@ const mapProduct = (p: any) => ({
   ...p,
   price: p.priceCents / 100,
   promotionalPrice: p.promotionalPriceCents ? p.promotionalPriceCents / 100 : null,
-  optionGroups: p.optionGroups?.map((g: any) => ({
-    ...g,
+  modifiers: p.optionGroups?.map((g: any) => ({
+    name: g.name,
+    min: g.minSelections,
+    max: g.maxSelections,
     options: g.options.map((o: any) => ({
-      ...o,
+      name: o.name,
       price: o.priceDeltaCents / 100
     }))
   }))
@@ -704,6 +706,7 @@ app.get('/api/products', async (req, res) => {
   const products = await prisma.product.findMany({
     where: { tenantId: req.tenantId! },
     include: {
+      category: true,
       optionGroups: { include: { options: true } }
     }
   });
@@ -714,6 +717,7 @@ app.get('/api/products/:id', async (req, res) => {
   const product = await prisma.product.findUnique({
     where: { id: req.params.id as string },
     include: {
+      category: true,
       optionGroups: { include: { options: true } }
     }
   });
@@ -728,8 +732,11 @@ app.get('/api/products/:id', async (req, res) => {
 app.post('/api/products', ownerMiddleware, async (req, res) => {
   try {
     const { modifiers, ...productData } = req.body;
-    const priceCents = Math.round((req.body.price || 0) * 100);
-    const promotionalPriceCents = req.body.promotionalPrice ? Math.round(req.body.promotionalPrice * 100) : null;
+    if (productData.price !== undefined) productData.priceCents = Math.round(productData.price * 100);
+    if (productData.promotionalPrice !== undefined) productData.promotionalPriceCents = productData.promotionalPrice ? Math.round(productData.promotionalPrice * 100) : null;
+    delete productData.price;
+    delete productData.promotionalPrice;
+
     const product = await prisma.product.create({ 
       data: {
         ...productData,
