@@ -998,11 +998,8 @@ app.post('/api/checkout/pix', async (req, res) => {
         discountCents: Math.round((discountAmount || 0) * 100),
         totalCents,
         paymentMethod: 'PIX_APP',
-        addressStreet,
-        addressNumber,
-        addressCity,
-        observation,
-        couponCode,
+        addressSnapshot: addressStreet ? `${addressStreet}, ${addressNumber} - ${addressCity}` : null,
+        notes: observation || null,
         customerId,
         items: {
           create: snapshotItems
@@ -1124,11 +1121,8 @@ app.post('/api/checkout/card', async (req, res) => {
           discountCents: Math.round((discountAmount || 0) * 100),
           totalCents,
           paymentMethod: 'CREDIT_CARD_ONLINE',
-          addressStreet,
-          addressNumber,
-          addressCity,
-          observation,
-          couponCode,
+          addressSnapshot: addressStreet ? `${addressStreet}, ${addressNumber} - ${addressCity}` : null,
+          notes: observation || null,
           customerId,
           items: {
             create: snapshotItems
@@ -1154,7 +1148,7 @@ app.post('/api/checkout/card', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
   try {
-    const { items, customerPhone, couponCode, discountAmount, paymentMethod, customerName, ...orderData } = req.body;
+    const { items, customerPhone, couponCode, discountAmount, paymentMethod, customerName, total, needsChange, changeAmount, addressStreet, addressNumber, addressCity, observation, ...orderData } = req.body;
     const orderNumber = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
     const restId = req.tenantId!;
     
@@ -1208,6 +1202,9 @@ app.post('/api/orders', async (req, res) => {
     const order = await prisma.order.create({
       data: {
         ...orderData,
+        addressSnapshot: addressStreet ? `${addressStreet}, ${addressNumber} - ${addressCity}` : null,
+        notes: observation || null,
+        changeForCents: needsChange && changeAmount ? Math.round(changeAmount * 100) : 0,
         customerNameSnapshot: customerName,
         customerPhoneSnapshot: customerPhone || '',
         tenantId: restId,
