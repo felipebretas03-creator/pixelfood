@@ -214,11 +214,12 @@ export default function CarrinhoPage() {
       addressCity: address?.city || "São Paulo",
       observation: observation.trim() || undefined,
       items: items.map(item => ({
-        productId: item.id.startsWith('prod-') ? null : item.id,
+        productId: item.productId || (item.id.startsWith('prod-') ? null : item.id),
         name: item.name,
         quantity: item.quantity,
         price: item.price,
-        observation: item.observation
+        observation: item.observation,
+        options: item.options
       }))
     };
 
@@ -291,11 +292,12 @@ export default function CarrinhoPage() {
         addressCity: address?.city || "São Paulo",
         observation: observation.trim() || undefined,
         items: items.map(item => ({
-          productId: item.id.startsWith('prod-') ? null : item.id,
+          productId: item.productId || (item.id.startsWith('prod-') ? null : item.id),
           name: item.name,
           quantity: item.quantity,
           price: item.price,
-          observation: item.observation
+          observation: item.observation,
+          options: item.options
         })),
         paymentData: param.formData // Token, installments, etc from MP Brick
       };
