@@ -1209,6 +1209,7 @@ app.post('/api/orders', async (req, res) => {
       data: {
         ...orderData,
         customerNameSnapshot: customerName,
+        customerPhoneSnapshot: customerPhone || '',
         tenantId: restId,
         orderNumber,
         status: initialStatus,
