@@ -848,7 +848,7 @@ app.delete('/api/products/:id', ownerMiddleware, async (req, res) => {
 app.get('/api/orders', async (req, res) => {
   const orders = await prisma.order.findMany({
     where: { tenantId: req.tenantId! },
-    include: { items: true, customer: true },
+    include: { items: { include: { options: true } }, customer: true },
     orderBy: { createdAt: 'desc' }
   });
   res.json(orders);
