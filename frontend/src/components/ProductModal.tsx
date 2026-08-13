@@ -154,7 +154,7 @@ export function ProductModal({ product, onClose, isStoreOpen = true }: any) {
             </div>
 
             <h2 className="text-xl font-bold mb-3">Descrição</h2>
-            <p className="text-stone-500 leading-relaxed font-medium text-sm mb-6">
+            <p className="text-stone-500 leading-relaxed font-medium text-sm mb-6 break-all break-words">
               {product.description}
             </p>
 

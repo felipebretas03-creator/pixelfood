@@ -407,7 +407,7 @@ export default function Home() {
                     </div>
                     <div className="flex-1 flex flex-col justify-center py-1">
                       <h3 className="font-bold text-stone-800 lg:text-stone-900 text-lg leading-tight mb-1">{prod.name}</h3>
-                      <p className="text-xs lg:text-sm text-stone-400 lg:text-stone-500 font-medium mb-3 lg:mb-4 lg:line-clamp-2">{prod.description}</p>
+                      <p className="text-xs lg:text-sm text-stone-400 lg:text-stone-500 font-medium mb-3 lg:mb-4 line-clamp-2 break-all">{prod.description}</p>
                       <div className="flex items-center gap-4 mt-auto">
                         <span className="font-bold text-brand-500 text-lg">R$ {prod.price.toFixed(2).replace('.', ',')}</span>
                       </div>
