@@ -584,14 +584,19 @@ export default function CardapioPage() {
                                 placeholder="Ex: Escolha o Sabor"
                               />
                             </div>
-                            <div className="col-span-3">
-                              <label className="block text-xs font-bold text-stone-600 mb-1">Mínimo</label>
-                              <input 
-                                type="number" min="0" 
-                                value={group.min}
-                                onChange={(e) => updateModifierGroup(gIdx, 'min', parseInt(e.target.value) || 0)}
-                                className="w-full bg-white border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-500"
-                              />
+                            <div className="col-span-3 flex flex-col justify-center pt-5">
+                              <label className="flex items-center gap-2 cursor-pointer group">
+                                <div className={`w-10 h-5 rounded-full relative transition-colors ${group.min > 0 ? 'bg-brand-500' : 'bg-stone-300'}`}>
+                                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${group.min > 0 ? 'translate-x-5' : 'translate-x-0'}`} />
+                                </div>
+                                <input 
+                                  type="checkbox"
+                                  checked={group.min > 0}
+                                  onChange={(e) => updateModifierGroup(gIdx, 'min', e.target.checked ? 1 : 0)}
+                                  className="hidden"
+                                />
+                                <span className="text-xs font-bold text-stone-600 group-hover:text-stone-900 transition-colors">Obrigatório</span>
+                              </label>
                             </div>
                             <div className="col-span-3">
                               <label className="block text-xs font-bold text-stone-600 mb-1">Máximo</label>
