@@ -259,14 +259,14 @@ export default function CarrinhoPage() {
               clearInterval(interval);
               clearCart();
               addToast("Pagamento PIX confirmado!");
-              router.push(`/pedidos/${responseData.order.id}`);
+              router.push(`/${slug}/pedidos/${responseData.order.id}`);
             }
           } catch(e) {}
         }, 3000);
       } else {
         clearCart();
         addToast("Pedido realizado com sucesso!");
-        router.push(`/pedidos/${responseData.id || responseData.order?.id}`);
+        router.push(`/${slug}/pedidos/${responseData.id || responseData.order?.id}`);
       }
     } catch (err: any) {
       console.error(err);
@@ -318,7 +318,7 @@ export default function CarrinhoPage() {
         setCardModalOpen(false);
         clearCart();
         addToast("Pagamento aprovado!");
-        router.push(`/pedidos/${responseData.order.id}`);
+        router.push(`/${slug}/pedidos/${responseData.order.id}`);
         resolve(); // Tells MP Brick that payment was successful
       } catch (err: any) {
         console.error("Payment error:", err);

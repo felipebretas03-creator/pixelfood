@@ -866,7 +866,7 @@ app.get('/api/customer/orders', async (req, res) => {
     
     const orders = await prisma.order.findMany({
       where: { tenantId: req.tenantId!, customerId: decoded.id },
-      include: { items: true, restaurant: true },
+      include: { items: true, tenant: true },
       orderBy: { createdAt: 'desc' }
     });
     res.json(orders);
