@@ -117,22 +117,19 @@ export default function PedidosKanban() {
         const newOrder = {
           id: dbOrder.id,
           orderNumber: `#${dbOrder.orderNumber}`,
-          customer: dbOrder.customerName,
+          customer: dbOrder.customerNameSnapshot || 'Cliente',
           items: dbOrder.items.map((i: any) => {
             let str = `${i.quantity}x ${i.name}`;
-            if (i.optionsData) {
-              try {
-                const options = JSON.parse(i.optionsData);
-                if (options.length > 0) str += ` (+ ${options.join(', ')})`;
-              } catch(e) {}
+            if (i.options && i.options.length > 0) {
+              str += ` (+ ${i.options.map((opt: any) => `${opt.quantity}x ${opt.name}`).join(', ')})`;
             }
             if (i.observation) str += ` [Obs: ${i.observation}]`;
             return str;
           }),
-          contact: dbOrder.customer?.phone || 'Sem contato',
-          address: dbOrder.addressStreet ? `${dbOrder.addressStreet}, ${dbOrder.addressNumber}${dbOrder.addressCity ? ' - ' + dbOrder.addressCity : ''}` : 'Retirada no Local',
-          paymentMethod: dbOrder.paymentMethod === 'PIX' ? 'Pix' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.needsChange ? `Dinheiro (Troco p/ ${dbOrder.changeAmount})` : 'Dinheiro') : 'Cartão',
-          total: dbOrder.total,
+          contact: dbOrder.customerPhoneSnapshot || dbOrder.customer?.phone || 'Sem contato',
+          address: dbOrder.addressSnapshot || 'Retirada no Local',
+          paymentMethod: dbOrder.paymentMethod === 'PIX_APP' || dbOrder.paymentMethod === 'MERCADO_PAGO_PIX' ? 'Pix' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.changeForCents > 0 ? `Dinheiro (Troco para R$ ${((dbOrder.totalCents + dbOrder.changeForCents)/100).toFixed(2)})` : 'Dinheiro') : 'Cartão',
+          total: dbOrder.totalCents / 100,
           status: mapStatusToFrontend(dbOrder.status),
           time: new Date(dbOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -161,18 +158,18 @@ export default function PedidosKanban() {
         if (autoPrintRef.current) {
           const printData: PrintOrderData = {
             orderNumber: dbOrder.orderNumber,
-            customerName: dbOrder.customerName,
-            phone: dbOrder.customer?.phone,
-            address: dbOrder.addressStreet ? `${dbOrder.addressStreet}, ${dbOrder.addressNumber}${dbOrder.addressCity ? ' - ' + dbOrder.addressCity : ''}` : undefined,
+            customerName: dbOrder.customerNameSnapshot || 'Cliente',
+            phone: dbOrder.customerPhoneSnapshot || dbOrder.customer?.phone,
+            address: dbOrder.addressSnapshot || undefined,
             items: dbOrder.items.map((i: any) => ({
               name: i.name,
               quantity: i.quantity,
               price: i.price,
-              options: i.optionsData ? (() => { try { return JSON.parse(i.optionsData).join(', '); } catch { return undefined; } })() : undefined,
+              options: i.options && i.options.length > 0 ? i.options.map((opt: any) => `${opt.quantity}x ${opt.name}`).join(', ') : undefined,
               observation: i.observation
             })),
-            total: dbOrder.total,
-            paymentMethod: dbOrder.paymentMethod === 'PIX' ? 'Pix' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.needsChange ? `Dinheiro (Troco p/ ${dbOrder.changeAmount})` : 'Dinheiro') : 'Cartão',
+            total: dbOrder.totalCents / 100,
+            paymentMethod: dbOrder.paymentMethod === 'PIX_APP' || dbOrder.paymentMethod === 'MERCADO_PAGO_PIX' ? 'PIX' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.changeForCents > 0 ? `Dinheiro (Troco p/ R$ ${((dbOrder.totalCents + dbOrder.changeForCents)/100).toFixed(2)})` : 'Dinheiro') : 'Cartão',
             createdAt: new Date(dbOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             storeName: storeNameRef.current
           };
