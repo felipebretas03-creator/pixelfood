@@ -699,10 +699,12 @@ const mapProduct = (p: any) => ({
   promotionalPrice: p.promotionalPriceCents ? p.promotionalPriceCents / 100 : null,
   active: p.isActive,
   modifiers: p.optionGroups?.map((g: any) => ({
+    id: g.id,
     name: g.name,
     min: g.minSelections,
     max: g.maxSelections,
     options: g.options.map((o: any) => ({
+      id: o.id,
       name: o.name,
       price: o.priceDeltaCents / 100
     }))
