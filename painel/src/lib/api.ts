@@ -25,8 +25,10 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
     finalUrl = targetUrl.replace('localhost', window.location.hostname);
   }
 
-  const headers = {
-    'Content-Type': 'application/json',
+  const isFormData = options.body instanceof FormData;
+  
+  const headers: any = {
+    ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
     ...options.headers,
     ...(tenantId ? { 'x-tenant-id': tenantId } : {}),
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})

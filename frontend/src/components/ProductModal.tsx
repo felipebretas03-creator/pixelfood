@@ -104,7 +104,7 @@ export function ProductModal({ product, onClose, isStoreOpen = true }: any) {
       {/* Imagem Voadora da Animação */}
       {isFlying && (
         <img 
-          src={product.image} 
+          src={product.imageUrl || 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=300'} 
           alt="Voando" 
           className="fixed w-48 h-48 rounded-2xl object-cover shadow-2xl z-[999999] pointer-events-none"
           style={{
@@ -136,7 +136,7 @@ export function ProductModal({ product, onClose, isStoreOpen = true }: any) {
           <div className="overflow-y-auto hide-scrollbar pb-32">
             {/* Header Image */}
             <div className="w-full h-64 relative bg-stone-100 rounded-t-[40px] overflow-hidden">
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+              <img src={product.imageUrl || 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=300'} alt={product.name} className="w-full h-full object-cover" />
             </div>
 
           {/* Content */}

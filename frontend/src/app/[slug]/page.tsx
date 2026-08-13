@@ -384,8 +384,8 @@ export default function Home() {
           
           const term = searchInput.toLowerCase();
           const catProducts = products.filter(p => {
-             if (p.category !== cat.name) return false;
-             if (term) return p.name.toLowerCase().includes(term) || p.description.toLowerCase().includes(term);
+             if (p.category?.name !== cat.name) return false;
+             if (term) return p.name.toLowerCase().includes(term) || (p.description && p.description.toLowerCase().includes(term));
              return true;
           });
 
@@ -403,7 +403,7 @@ export default function Home() {
                     className="flex flex-row gap-4 lg:gap-6 items-center lg:items-stretch bg-white rounded-3xl lg:rounded-2xl p-3 lg:p-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] lg:shadow-sm border border-stone-50 lg:border-stone-200 text-left active:scale-[0.98] transition-transform cursor-pointer hover:border-brand-500 group"
                   >
                     <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-2xl overflow-hidden flex-shrink-0 relative">
-                      <img src={prod.image} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={prod.imageUrl || 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=300'} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     </div>
                     <div className="flex-1 flex flex-col justify-center py-1">
                       <h3 className="font-bold text-stone-800 lg:text-stone-900 text-lg leading-tight mb-1">{prod.name}</h3>

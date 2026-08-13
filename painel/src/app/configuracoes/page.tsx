@@ -165,28 +165,22 @@ export default function ConfiguracoesPage() {
   };
 
   const handleUploadLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    let file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
+    try {
+      const { convertToWebP } = await import('@/lib/imageConverter');
+      file = await convertToWebP(file);
+    } catch (err) {
+      console.error("Erro ao converter logo para WebP", err);
+    }
     const formData = new FormData();
     formData.append('logo', file);
 
-    const authStorage = localStorage.getItem('painel-auth-storage');
-    let tenantId = '';
-    if (authStorage) {
-      try {
-        const parsed = JSON.parse(authStorage);
-        tenantId = parsed.state?.tenant?.id || '';
-      } catch (err) {}
-    }
-
     try {
-      const res = await fetch('/api/settings/logo', {
+      const res = await apiFetch('/api/settings/logo', {
         method: 'POST',
-        headers: {
-          'x-tenant-id': tenantId
-        },
         body: formData
       });
       const data = await res.json();
@@ -203,28 +197,23 @@ export default function ConfiguracoesPage() {
   };
 
   const handleUploadBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    let file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploadingBanner(true);
+    try {
+      const { convertToWebP } = await import('@/lib/imageConverter');
+      // Banners podem ser maiores, então 1200x800
+      file = await convertToWebP(file, 1200, 800);
+    } catch (err) {
+      console.error("Erro ao converter banner para WebP", err);
+    }
     const formData = new FormData();
     formData.append('banner', file);
 
-    const authStorage = localStorage.getItem('painel-auth-storage');
-    let tenantId = '';
-    if (authStorage) {
-      try {
-        const parsed = JSON.parse(authStorage);
-        tenantId = parsed.state?.tenant?.id || '';
-      } catch (err) {}
-    }
-
     try {
-      const res = await fetch('/api/settings/banner', {
+      const res = await apiFetch('/api/settings/banner', {
         method: 'POST',
-        headers: {
-          'x-tenant-id': tenantId
-        },
         body: formData
       });
       const data = await res.json();

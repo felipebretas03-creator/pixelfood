@@ -102,7 +102,20 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   const handleCopyLink = () => {
     const deliveryLink = `https://pixelfood-app.vercel.app/${tenant?.slug || ''}`; 
-    navigator.clipboard.writeText(deliveryLink);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(deliveryLink).catch(() => {});
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = deliveryLink;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {}
+      document.body.removeChild(textArea);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

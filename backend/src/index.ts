@@ -35,7 +35,8 @@ const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_KE
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // 1. Request ID Middleware
 app.use((req, res, next) => {
@@ -324,9 +325,10 @@ const masterMiddleware = async (req: Request, res: Response, next: NextFunction)
   const token = authHeader.split(' ')[1];
   try {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    if (decoded.role !== 'owner' || !decoded.isMaster) {
+    if ((decoded.role !== 'owner' && decoded.role !== 'OWNER') || !decoded.isMaster) {
       return res.status(403).json({ error: 'Proibido' });
     }
+    req.userId = decoded.id;
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Token inválido' });
@@ -423,7 +425,7 @@ const ownerMiddleware = async (req: Request, res: Response, next: NextFunction) 
   try {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     req.userId = decoded.id;
-    if (decoded.role !== 'owner' || decoded.tenantId !== req.tenantId) {
+    if ((decoded.role !== 'owner' && decoded.role !== 'OWNER') || decoded.tenantId !== req.tenantId) {
       return res.status(403).json({ error: 'Proibido' });
     }
     next();
@@ -679,9 +681,13 @@ app.delete('/api/categories/:id', ownerMiddleware, async (req, res) => {
       where: { id: req.params.id as string }
     });
     res.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    res.status(400).json({ error: 'Erro ao deletar categoria' });
+    if (error.code === 'P2003') {
+      res.status(400).json({ error: 'Não é possível excluir esta categoria pois existem produtos vinculados a ela. Exclua os produtos primeiro.' });
+    } else {
+      res.status(400).json({ error: 'Erro ao deletar categoria' });
+    }
   }
 });
 
@@ -1576,6 +1582,42 @@ app.use(errorHandler);
 // Start Background Jobs
 startEmailWorker();
 
-server.listen(PORT, () => {
+const httpServer = server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+// ==========================================
+// GRACEFUL SHUTDOWN
+// ==========================================
+const gracefulShutdown = async (signal: string) => {
+  console.log(`\nRecebido ${signal}. Iniciando encerramento gracioso (Graceful Shutdown)...`);
+  
+  httpServer.close(async () => {
+    console.log('Servidor HTTP encerrado.');
+    try {
+      await prisma.$disconnect();
+      console.log('Conexão com banco de dados encerrada.');
+      process.exit(0);
+    } catch (err) {
+      console.error('Erro ao encerrar banco de dados:', err);
+      process.exit(1);
+    }
+  });
+
+  // Forçar encerramento após 10 segundos se as conexões pendentes não finalizarem
+  setTimeout(() => {
+    console.error('Não foi possível fechar as conexões a tempo. Forçando encerramento.');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  gracefulShutdown('uncaughtException');
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  gracefulShutdown('unhandledRejection');
 });

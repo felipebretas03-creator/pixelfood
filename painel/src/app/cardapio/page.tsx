@@ -53,6 +53,8 @@ export default function CardapioPage() {
   const AVAILABLE_ICONS = ['🍔', '🍕', '🌭', '🥪', '🌮', '🌯', '🥙', '🥗', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🍤', '🥩', '🍗', '🍖', '🥟', '🍟', '🥞', '🧇', '🧀', '🥐', '🥖', '🥨', '🥯', '🍰', '🎂', '🧁', '🥧', '🍩', '🍪', '🍫', '🍬', '🍭', '🍧', '🍨', '🍦', '☕', '🍵', '🥤', '🧋', '🧃', '🧉', '🍺', '🍻', '🥂', '🍷', '🍹', '🍽️'];
 
   // Form State
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingCategory, setIsSavingCategory] = useState(false);
   const [formData, setFormData] = useState({ 
     name: '', 
     description: '',
@@ -64,6 +66,9 @@ export default function CardapioPage() {
 
   // Delete Confirmation State
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteCategoryConfirm, setDeleteCategoryConfirm] = useState<{id: string, name: string} | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeletingCategory, setIsDeletingCategory] = useState(false);
 
   const fetchProducts = async () => {
     try {
@@ -93,14 +98,17 @@ export default function CardapioPage() {
     fetchCategories();
   }, []);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      try {
+        const { convertToWebPBase64 } = await import('@/lib/imageConverter');
+        const webpBase64 = await convertToWebPBase64(file);
+        setFormData(prev => ({ ...prev, imageUrl: webpBase64 }));
+      } catch (err) {
+        console.error("Erro ao converter imagem", err);
+        alert("Erro ao processar imagem.");
+      }
     }
   };
 
@@ -128,7 +136,8 @@ export default function CardapioPage() {
   };
 
   const executeDelete = async () => {
-    if (deleteConfirmId) {
+    if (deleteConfirmId && !isDeleting) {
+      setIsDeleting(true);
       try {
         await apiFetch(`/api/products/${deleteConfirmId}`, {
           method: 'DELETE'
@@ -137,7 +146,35 @@ export default function CardapioPage() {
         setDeleteConfirmId(null);
       } catch (e) {
         console.error(e);
+      } finally {
+        setIsDeleting(false);
       }
+    }
+  };
+
+  const handleDeleteCategory = (id: string, name: string) => {
+    setDeleteCategoryConfirm({ id, name });
+  };
+
+  const executeDeleteCategory = async () => {
+    if (!deleteCategoryConfirm || isDeletingCategory) return;
+    setIsDeletingCategory(true);
+    const { id, name } = deleteCategoryConfirm;
+    
+    try {
+      const res = await apiFetch(`/api/categories/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.error || "Erro ao excluir categoria");
+      }
+      setCategories(prev => prev.filter(c => c.id !== id));
+      if (activeCategory === name) setActiveCategory('Todos');
+      setDeleteCategoryConfirm(null);
+    } catch (e: any) {
+      alert(e.message || "Erro ao excluir categoria");
+      setDeleteCategoryConfirm(null);
+    } finally {
+      setIsDeletingCategory(false);
     }
   };
 
@@ -167,12 +204,15 @@ export default function CardapioPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving) return;
     
     const priceNumber = parseFloat(formData.price.replace(',', '.'));
     if (isNaN(priceNumber)) return alert("Preço inválido");
 
+    setIsSaving(true);
     const payload = {
       name: formData.name,
+      description: formData.description,
       categoryId: formData.categoryId,
       price: priceNumber,
       imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=150',
@@ -189,22 +229,27 @@ export default function CardapioPage() {
 
     try {
       if (editingProduct) {
-        await apiFetch(`/api/products/${editingProduct.id}`, {
+        const res = await apiFetch(`/api/products/${editingProduct.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+        if (!res.ok) throw new Error("Erro na API");
       } else {
-        await apiFetch('/api/products', {
+        const res = await apiFetch('/api/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...payload, active: true })
         });
+        if (!res.ok) throw new Error("Erro na API");
       }
       fetchProducts();
       closeModal();
     } catch (error) {
+      console.error(error);
       alert("Erro ao salvar produto");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -275,7 +320,7 @@ export default function CardapioPage() {
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex flex-col gap-6">
         {/* Filters Bar */}
         <div className="flex items-center justify-between">
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar items-center">
+          <div className="flex gap-2 overflow-x-auto hide-scrollbar items-center py-2 px-2 -my-2 -mx-2">
             <button 
               onClick={() => setActiveCategory('Todos')}
               className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
@@ -284,16 +329,28 @@ export default function CardapioPage() {
             >
               Todos
             </button>
-            {categories.map(cat => (
-              <button 
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.name)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
-                  activeCategory === cat.name ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                }`}
-              >
-                {cat.name}
-              </button>
+            {categories.map((cat, idx) => (
+              <div key={cat.id || idx} className="relative group">
+                <button 
+                  onClick={() => setActiveCategory(cat.name)}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                    activeCategory === cat.name ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  }`}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.name}</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteCategory(cat.id, cat.name);
+                  }}
+                  className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
+                  title="Excluir Categoria"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
             ))}
             <button 
               onClick={() => setIsCategoryModalOpen(true)}
@@ -330,8 +387,8 @@ export default function CardapioPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map(prod => (
-                <tr key={prod.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+              {filteredProducts.map((prod, idx) => (
+                <tr key={prod.id || idx} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
                   <td className="p-4">
                     <img src={prod.imageUrl || 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=150'} alt={prod.name} className="w-12 h-12 rounded-xl object-cover shadow-sm" />
                   </td>
@@ -439,8 +496,8 @@ export default function CardapioPage() {
                         onChange={(e) => setFormData({...formData, categoryId: e.target.value})}
                         className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-brand-500 focus:bg-white transition-all appearance-none cursor-pointer"
                       >
-                        {categories.map(c => (
-                          <option key={c.id} value={c.id}>{c.name}</option>
+                        {categories.map((c, idx) => (
+                          <option key={c.id || idx} value={c.id}>{c.icon} {c.name}</option>
                         ))}
                       </select>
                     </div>
@@ -618,9 +675,10 @@ export default function CardapioPage() {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 bg-brand-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-600 transition-colors shadow-sm shadow-brand-500/20"
+                  disabled={isSaving}
+                  className="flex-1 bg-brand-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-600 transition-colors shadow-sm shadow-brand-500/20 disabled:opacity-70 disabled:pointer-events-none"
                 >
-                  {editingProduct ? 'Salvar Alterações' : 'Criar Produto'}
+                  {isSaving ? 'Salvando...' : (editingProduct ? 'Salvar Alterações' : 'Criar Produto')}
                 </button>
               </div>
             </form>
@@ -635,7 +693,9 @@ export default function CardapioPage() {
             <h2 className="text-xl font-black text-stone-900 mb-4">Nova Categoria</h2>
             <form onSubmit={async (e) => {
               e.preventDefault();
+              if (isSavingCategory) return;
               if (newCategoryName.trim()) {
+                setIsSavingCategory(true);
                 try {
                   const res = await apiFetch('/api/categories', {
                     method: 'POST',
@@ -645,6 +705,7 @@ export default function CardapioPage() {
                       icon: newCategoryIcon 
                     })
                   });
+                  if (!res.ok) throw new Error("Erro na API");
                   const newCat = await res.json();
                   setCategories(prev => [...prev, newCat]);
                   setNewCategoryName('');
@@ -652,6 +713,8 @@ export default function CardapioPage() {
                   setIsCategoryModalOpen(false);
                 } catch (err) {
                   alert("Erro ao salvar categoria");
+                } finally {
+                  setIsSavingCategory(false);
                 }
               }
             }}>
@@ -689,9 +752,10 @@ export default function CardapioPage() {
                 </button>
                 <button 
                   type="submit" 
-                  className="flex-1 px-4 py-3 bg-brand-500 text-white rounded-xl font-bold text-sm shadow-sm hover:bg-brand-600"
+                  disabled={isSavingCategory}
+                  className="flex-1 px-4 py-3 bg-brand-500 text-white rounded-xl font-bold text-sm shadow-sm hover:bg-brand-600 disabled:opacity-70 disabled:pointer-events-none"
                 >
-                  Salvar
+                  {isSavingCategory ? 'Salvando...' : 'Salvar'}
                 </button>
               </div>
             </form>
@@ -719,14 +783,45 @@ export default function CardapioPage() {
               </button>
               <button 
                 onClick={executeDelete}
-                className="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 transition-colors text-sm shadow-sm shadow-red-500/20"
+                disabled={isDeleting}
+                className="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 transition-colors text-sm shadow-sm disabled:opacity-70 disabled:pointer-events-none"
               >
-                Sim, excluir
+                {isDeleting ? 'Excluindo...' : 'Excluir'}
               </button>
             </div>
           </div>
         </div>
       )}
+      {/* Modal de Confirmação de Exclusão de Categoria */}
+      {deleteCategoryConfirm && (
+        <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
+              <Trash2 className="w-8 h-8" />
+            </div>
+            <h2 className="text-xl font-black text-stone-900 mb-2">Excluir Categoria</h2>
+            <p className="text-stone-500 text-sm font-medium mb-6">
+              Tem certeza que deseja excluir a categoria "{deleteCategoryConfirm.name}"? Se houver produtos nela, você não conseguirá excluí-la.
+            </p>
+            <div className="flex items-center gap-3 w-full">
+              <button 
+                onClick={() => setDeleteCategoryConfirm(null)}
+                className="flex-1 bg-stone-100 text-stone-600 py-3 rounded-xl font-bold hover:bg-stone-200 transition-colors text-sm"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={executeDeleteCategory}
+                disabled={isDeletingCategory}
+                className="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 transition-colors text-sm shadow-sm disabled:opacity-70 disabled:pointer-events-none"
+              >
+                {isDeletingCategory ? 'Excluindo...' : 'Excluir'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

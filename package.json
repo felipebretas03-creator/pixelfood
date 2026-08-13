@@ -24,6 +24,7 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "artillery": "^2.0.33",
+    "concurrently": "^10.0.4",
     "tsx": "^4.23.12"
   }
 }
