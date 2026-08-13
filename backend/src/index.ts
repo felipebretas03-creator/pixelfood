@@ -968,7 +968,7 @@ app.get('/api/orders/:id', async (req, res) => {
 
 app.post('/api/checkout/pix', async (req, res) => {
   try {
-    const { items, total, customerName, phone, document, addressStreet, addressNumber, addressCity, observation, couponCode, discountAmount, customerId } = req.body;
+    const { items, total, customerName, customerPhone, document, addressStreet, addressNumber, addressCity, observation, couponCode, discountAmount, customerId } = req.body;
     
     // Get Tenant Settings to retrieve mpAccessToken
     const settings = await prisma.settings.findUnique({ where: { tenantId: req.tenantId! } });
@@ -992,7 +992,7 @@ app.post('/api/checkout/pix', async (req, res) => {
         tenantId: req.tenantId!,
         orderNumber,
         customerNameSnapshot: customerName,
-        customerPhoneSnapshot: phone || '',
+        customerPhoneSnapshot: customerPhone || '',
         status: 'PAYMENT_PENDING',
         subtotalCents,
         discountCents: Math.round((discountAmount || 0) * 100),
@@ -1078,7 +1078,7 @@ app.post('/api/webhooks/mercadopago/:tenantId', async (req, res) => {
 
 app.post('/api/checkout/card', async (req, res) => {
   try {
-    const { items, total, customerName, phone, addressStreet, addressNumber, addressCity, observation, couponCode, discountAmount, customerId, paymentData } = req.body;
+    const { items, total, customerName, customerPhone, addressStreet, addressNumber, addressCity, observation, couponCode, discountAmount, customerId, paymentData } = req.body;
     
     const settings = await prisma.settings.findUnique({ where: { tenantId: req.tenantId! } });
     if (!settings || !settings.mpAccessToken) {
@@ -1115,7 +1115,7 @@ app.post('/api/checkout/card', async (req, res) => {
           tenantId: req.tenantId!,
           orderNumber,
           customerNameSnapshot: customerName,
-          customerPhoneSnapshot: phone || '',
+          customerPhoneSnapshot: customerPhone || '',
           status: dbStatus,
           subtotalCents,
           discountCents: Math.round((discountAmount || 0) * 100),
@@ -1201,7 +1201,6 @@ app.post('/api/orders', async (req, res) => {
 
     const order = await prisma.order.create({
       data: {
-        ...orderData,
         addressSnapshot: addressStreet ? `${addressStreet}, ${addressNumber} - ${addressCity}` : null,
         notes: observation || null,
         changeForCents: needsChange && changeAmount ? Math.round(changeAmount * 100) : 0,
