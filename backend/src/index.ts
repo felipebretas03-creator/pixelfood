@@ -1154,7 +1154,7 @@ app.post('/api/checkout/card', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
   try {
-    const { items, customerPhone, couponCode, discountAmount, paymentMethod, ...orderData } = req.body;
+    const { items, customerPhone, couponCode, discountAmount, paymentMethod, customerName, ...orderData } = req.body;
     const orderNumber = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
     const restId = req.tenantId!;
     
@@ -1174,7 +1174,7 @@ app.post('/api/orders', async (req, res) => {
         customer = await prisma.customer.create({
           data: {
             tenantId: restId,
-            name: orderData.customerNameSnapshot,
+            name: customerName,
             phone: customerPhone,
           }
         });
@@ -1208,6 +1208,7 @@ app.post('/api/orders', async (req, res) => {
     const order = await prisma.order.create({
       data: {
         ...orderData,
+        customerNameSnapshot: customerName,
         tenantId: restId,
         orderNumber,
         status: initialStatus,
@@ -1239,7 +1240,7 @@ app.post('/api/orders', async (req, res) => {
         if (paymentMethod === 'MERCADO_PAGO_PIX') {
           paymentData = await createPixPayment(restId, order, {
             email: 'customer@pixelfood.com.br',
-            name: customerObj?.name || orderData.customerNameSnapshot
+            name: customerObj?.name || customerName
           });
         } else if (paymentMethod === 'MERCADO_PAGO_CARD') {
           paymentData = await createCardPreference(restId, order);
