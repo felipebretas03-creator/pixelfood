@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { PackageOpen, Clock, Check, Bike, ArrowRight, Phone, MapPin, CreditCard, Printer } from 'lucide-react';
+import { PackageOpen, Clock, Check, Bike, ArrowRight, Phone, MapPin, CreditCard, Printer, X } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { printOrderReceipt, PrintOrderData } from '@/lib/printer';
 
-type OrderStatus = 'Novo' | 'Preparando' | 'Pronto' | 'Em Rota' | 'Finalizado';
+type OrderStatus = 'Novo' | 'Preparando' | 'Pronto' | 'Em Rota' | 'Finalizado' | 'Cancelado';
 
 interface Order {
   id: string;
@@ -26,7 +26,8 @@ const mapStatusToFrontend = (dbStatus: string): OrderStatus => {
     case 'READY': return 'Pronto';
     case 'IN_TRANSIT': return 'Em Rota';
     case 'DELIVERED': return 'Finalizado';
-    case 'CANCELLED': return 'Finalizado';
+    case 'CANCELLED': return 'Cancelado';
+    case 'REJECTED': return 'Cancelado';
     default: return 'Novo';
   }
 };
@@ -38,6 +39,7 @@ const mapFrontendToDb = (frontendStatus: OrderStatus): string => {
     case 'Pronto': return 'READY';
     case 'Em Rota': return 'IN_TRANSIT';
     case 'Finalizado': return 'DELIVERED';
+    case 'Cancelado': return 'CANCELLED';
     default: return 'PENDING';
   }
 };
@@ -196,7 +198,7 @@ export default function PedidosKanban() {
     };
   }, []);
 
-  const archivedOrders = orders.filter(o => o.status === 'Finalizado');
+  const archivedOrders = orders.filter(o => o.status === 'Finalizado' || o.status === 'Cancelado');
 
   const handleDragStart = (e: React.DragEvent, orderId: string) => {
     setDraggedOrderId(orderId);
@@ -230,7 +232,7 @@ export default function PedidosKanban() {
   const advanceStatus = async (orderId: string, currentStatus: OrderStatus) => {
     const statusFlow: OrderStatus[] = ['Novo', 'Preparando', 'Pronto', 'Em Rota', 'Finalizado'];
     const currentIndex = statusFlow.indexOf(currentStatus);
-    if (currentIndex < statusFlow.length - 1) {
+    if (currentIndex < statusFlow.length - 1 && currentIndex !== -1) {
       const nextStatus = statusFlow[currentIndex + 1];
       
       // Otimisticamente atualiza a UI
@@ -243,8 +245,25 @@ export default function PedidosKanban() {
           body: JSON.stringify({ status: mapFrontendToDb(nextStatus) })
         });
       } catch (error) {
-        console.error("Erro ao avançar o status:", error);
+        console.error("Erro ao atualizar o status:", error);
       }
+    }
+  };
+
+  const cancelOrder = async (orderId: string) => {
+    if (!window.confirm("Tem certeza que deseja cancelar este pedido? Ele irá para a aba de arquivados.")) return;
+    
+    // Otimisticamente atualiza a UI
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'Cancelado' } : o));
+
+    try {
+      await apiFetch(`/api/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED', reason: 'Cancelado pelo painel' })
+      });
+    } catch (error) {
+      console.error("Erro ao cancelar o pedido:", error);
     }
   };
 
@@ -362,18 +381,28 @@ export default function PedidosKanban() {
 
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-black/5">
                       <span className="font-bold text-stone-900">R$ {order.total.toFixed(2).replace('.', ',')}</span>
-                      <button 
-                        type="button"
-                        onClick={() => advanceStatus(order.id, order.status)}
-                        className={`flex items-center justify-center w-8 h-8 border rounded-full shadow-sm hover:scale-105 active:scale-95 transition-all ${
-                          col.status === 'Em Rota' 
-                            ? 'bg-green-500 border-green-600 text-white hover:bg-green-600' 
-                            : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
-                        }`}
-                        title={col.status === 'Em Rota' ? "Concluir pedido" : "Avançar pedido"}
-                      >
-                        {col.status === 'Em Rota' ? <Check className="w-4 h-4 pointer-events-none" /> : <ArrowRight className="w-4 h-4 pointer-events-none" />}
-                      </button>
+                      <div className="flex gap-2">
+                        <button 
+                          type="button"
+                          onClick={() => cancelOrder(order.id)}
+                          className="flex items-center justify-center w-8 h-8 border rounded-full shadow-sm bg-white border-red-200 text-red-500 hover:bg-red-50 hover:scale-105 active:scale-95 transition-all"
+                          title="Cancelar pedido"
+                        >
+                          <X className="w-4 h-4 pointer-events-none" />
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => advanceStatus(order.id, order.status)}
+                          className={`flex items-center justify-center w-8 h-8 border rounded-full shadow-sm hover:scale-105 active:scale-95 transition-all ${
+                            col.status === 'Em Rota' 
+                              ? 'bg-green-500 border-green-600 text-white hover:bg-green-600' 
+                              : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+                          }`}
+                          title={col.status === 'Em Rota' ? "Concluir pedido" : "Avançar pedido"}
+                        >
+                          {col.status === 'Em Rota' ? <Check className="w-4 h-4 pointer-events-none" /> : <ArrowRight className="w-4 h-4 pointer-events-none" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
