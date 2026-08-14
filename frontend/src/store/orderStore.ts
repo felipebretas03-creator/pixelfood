@@ -16,6 +16,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  tenantId?: string;
   orderNumber?: string;
   date: string;
   status: OrderStatus;

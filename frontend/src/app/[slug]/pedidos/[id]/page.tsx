@@ -31,6 +31,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
         if (data && !data.error) {
           setOrder({
             id: data.id,
+            tenantId: data.tenantId,
             orderNumber: data.orderNumber,
             date: data.createdAt,
             status: data.status,
@@ -56,9 +57,14 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
   }, [resolvedParams.id]);
 
   useEffect(() => {
+    if (!order?.tenantId) return;
+
     let socket: any;
     import('socket.io-client').then(({ io }) => {
-      socket = io('');
+      socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000');
+      
+      socket.emit('join_restaurant', order.tenantId);
+
       socket.on('order_status_updated', (dbOrder: any) => {
         if (dbOrder.id === resolvedParams.id) {
           setOrder((prev: any) => prev ? { ...prev, status: dbOrder.status } : null);
@@ -70,7 +76,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
     return () => {
       if (socket) socket.disconnect();
     };
-  }, [resolvedParams.id]);
+  }, [order?.tenantId, resolvedParams.id]);
 
   if (!mounted || !order) return null;
 

@@ -25,7 +25,14 @@ export default function AoVivoPage() {
     let isMounted = true;
     import('socket.io-client').then(({ io }) => {
       if (!isMounted) return;
-      socket = io('');
+      socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000');
+      try {
+        const authData = JSON.parse(localStorage.getItem('painel-auth-storage') || '{}');
+        if (authData.state?.tenant?.id) {
+          socket.emit('join_restaurant', authData.state.tenant.id);
+        }
+      } catch(e) {}
+      
       socket.on('new_order', (dbOrder: any) => {
         setFaturamento(prev => prev + dbOrder.total);
         setPedidosTotais(prev => prev + 1);
