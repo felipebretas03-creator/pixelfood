@@ -57,6 +57,7 @@ export default function PedidosKanban() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [draggedOrderId, setDraggedOrderId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
   const [autoPrint, setAutoPrint] = useState(false);
   const [storeName, setStoreName] = useState('Restaurante');
   const autoPrintRef = useRef(false);
@@ -250,9 +251,12 @@ export default function PedidosKanban() {
     }
   };
 
-  const cancelOrder = async (orderId: string) => {
-    if (!window.confirm("Tem certeza que deseja cancelar este pedido? Ele irá para a aba de arquivados.")) return;
+  const cancelOrder = async () => {
+    if (!orderToCancel) return;
     
+    const orderId = orderToCancel;
+    setOrderToCancel(null);
+
     // Otimisticamente atualiza a UI
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'Cancelado' } : o));
 
@@ -384,7 +388,7 @@ export default function PedidosKanban() {
                       <div className="flex gap-2">
                         <button 
                           type="button"
-                          onClick={() => cancelOrder(order.id)}
+                          onClick={() => setOrderToCancel(order.id)}
                           className="flex items-center justify-center w-8 h-8 border rounded-full shadow-sm bg-white border-red-200 text-red-500 hover:bg-red-50 hover:scale-105 active:scale-95 transition-all"
                           title="Cancelar pedido"
                         >
@@ -455,6 +459,34 @@ export default function PedidosKanban() {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {orderToCancel && (
+        <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm flex flex-col shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mb-4 self-center">
+              <X className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-black text-stone-900 text-center mb-2">Cancelar Pedido</h2>
+            <p className="text-stone-500 text-center text-sm font-medium mb-8">
+              Tem certeza que deseja cancelar este pedido? Ele será movido para a aba de arquivados e não aparecerá mais na esteira.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setOrderToCancel(null)}
+                className="flex-1 py-3.5 rounded-full font-bold bg-stone-100 text-stone-700 hover:bg-stone-200 active:scale-[0.98] transition-all"
+              >
+                Voltar
+              </button>
+              <button 
+                onClick={cancelOrder}
+                className="flex-1 py-3.5 rounded-full font-bold bg-red-500 text-white shadow-lg shadow-red-500/30 hover:bg-red-600 active:scale-[0.98] transition-all"
+              >
+                Sim, cancelar
+              </button>
             </div>
           </div>
         </div>
