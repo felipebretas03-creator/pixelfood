@@ -34,16 +34,20 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
             orderNumber: data.orderNumber,
             date: data.createdAt,
             status: data.status,
-            total: data.total,
-            items: data.items,
+            total: data.totalCents / 100,
+            items: data.items.map((i: any) => ({
+              ...i,
+              price: i.priceCents / 100,
+            })),
             paymentMethod: data.paymentMethod,
-            needsChange: data.needsChange,
-            changeAmount: data.changeAmount,
-            address: {
-              street: data.addressStreet,
-              number: data.addressNumber,
-              city: data.addressCity
-            }
+            needsChange: data.paymentMethod === 'CASH' && data.changeForCents > 0,
+            changeAmount: data.paymentMethod === 'CASH' && data.changeForCents > 0 ? ((data.totalCents + data.changeForCents)/100).toFixed(2) : undefined,
+            address: data.addressSnapshot ? {
+              street: data.addressSnapshot,
+              number: '',
+              neighborhood: ''
+            } : undefined,
+            observation: data.notes
           } as any);
         }
       })
@@ -168,9 +172,13 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
           <div className="flex-1">
             <h3 className="font-bold text-stone-900 mb-1">Endereço de Entrega</h3>
             <p className="text-sm text-stone-500 leading-relaxed">
-              {(order.address || address) 
-                ? `${(order.address || address)?.street || ''}, ${(order.address || address)?.number || ''} - ${(order.address || address)?.neighborhood || ''}` 
-                : "Rua Exemplo, 123 - Centro"}
+              {order.address?.street ? (
+                order.address.street
+              ) : address ? (
+                `${address.street || ''}, ${address.number || ''} - ${address.neighborhood || ''}`
+              ) : (
+                "Rua Exemplo, 123 - Centro"
+              )}
             </p>
           </div>
         </div>
@@ -181,17 +189,17 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
         <section className="px-6 mb-6">
           <div className="bg-white rounded-3xl p-5 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-stone-100 flex gap-4 items-start">
             <div className="w-10 h-10 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center flex-shrink-0">
-              {order.paymentMethod === 'PIX' && <QrCode className="w-5 h-5" />}
+              {(order.paymentMethod === 'PIX_APP' || order.paymentMethod === 'MERCADO_PAGO_PIX') && <QrCode className="w-5 h-5" />}
               {order.paymentMethod === 'CREDIT_CARD' && <CreditCard className="w-5 h-5" />}
               {order.paymentMethod === 'CASH' && <Banknote className="w-5 h-5" />}
             </div>
             <div className="flex-1 flex flex-col justify-center">
               <h3 className="font-bold text-stone-900 mb-1">Forma de Pagamento</h3>
               <p className="text-sm text-stone-500 leading-relaxed">
-                {order.paymentMethod === 'PIX' && 'Pix'}
+                {order.paymentMethod === 'PIX_APP' || order.paymentMethod === 'MERCADO_PAGO_PIX' ? 'Pix' : ''}
                 {order.paymentMethod === 'CREDIT_CARD' && 'Cartão de Crédito'}
                 {order.paymentMethod === 'CASH' && (
-                  <>Dinheiro {order.needsChange && order.changeAmount ? `(Troco para R$ ${order.changeAmount})` : "(Sem troco)"}</>
+                  <>Dinheiro {order.needsChange && order.changeAmount ? `(Troco para R$ ${order.changeAmount.replace('.', ',')})` : "(Sem troco)"}</>
                 )}
               </p>
             </div>
