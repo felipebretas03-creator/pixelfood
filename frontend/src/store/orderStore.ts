@@ -21,7 +21,7 @@ export interface Order {
   status: OrderStatus;
   items: OrderItem[];
   total: number;
-  paymentMethod?: 'PIX' | 'CREDIT_CARD' | 'CASH';
+  paymentMethod?: string;
   needsChange?: boolean;
   changeAmount?: string;
   address?: {
