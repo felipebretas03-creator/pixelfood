@@ -1305,7 +1305,7 @@ app.get('/api/dashboard', async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    const totalRevenue = orders.reduce((acc, order) => acc + order.totalCents, 0);
+    const totalRevenue = orders.reduce((acc, order) => acc + order.totalCents, 0) / 100;
     const totalOrders = orders.length;
     
     const chartData = [
@@ -1321,7 +1321,7 @@ app.get('/api/dashboard', async (req, res) => {
     orders.forEach(order => {
       const dayIndex = new Date(order.createdAt).getDay();
       const mappedIndex = dayIndex === 0 ? 6 : dayIndex - 1;
-      if(chartData[mappedIndex]) chartData[mappedIndex].vendas += order.totalCents;
+      if(chartData[mappedIndex]) chartData[mappedIndex].vendas += (order.totalCents / 100);
     });
 
     res.json({
@@ -1329,7 +1329,7 @@ app.get('/api/dashboard', async (req, res) => {
       totalOrders,
       averageTicket: totalOrders > 0 ? totalRevenue / totalOrders : 0,
       chartData,
-      recentOrders: orders.slice(0, 5)
+      recentOrders: orders.slice(0, 5).map(o => ({ ...o, total: o.totalCents / 100 }))
     });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao carregar dashboard' });
@@ -1355,7 +1355,7 @@ app.get('/api/dashboard/fechamento', async (req, res) => {
       }
     });
 
-    const totalRevenue = orders.reduce((acc, order) => acc + order.totalCents, 0);
+    const totalRevenue = orders.reduce((acc, order) => acc + order.totalCents, 0) / 100;
     const totalOrders = orders.length;
 
     let pix = 0;
@@ -1363,9 +1363,9 @@ app.get('/api/dashboard/fechamento', async (req, res) => {
     let card = 0;
 
     orders.forEach(order => {
-      if (order.paymentMethod === 'PIX') pix += order.totalCents;
-      else if (order.paymentMethod === 'CASH') cash += order.totalCents;
-      else card += order.totalCents;
+      if (order.paymentMethod === 'PIX_APP' || order.paymentMethod === 'MERCADO_PAGO_PIX') pix += (order.totalCents / 100);
+      else if (order.paymentMethod === 'CASH') cash += (order.totalCents / 100);
+      else card += (order.totalCents / 100);
     });
 
     res.json({
