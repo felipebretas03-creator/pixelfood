@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { showToast } from '@/store/toastStore';
 
 function CompletarCadastroForm() {
   const router = useRouter();
@@ -16,7 +17,7 @@ function CompletarCadastroForm() {
 
   useEffect(() => {
     if (!token) {
-      alert("Token inválido ou não fornecido.");
+      showToast("Token inválido ou não fornecido.", 'error');
       router.push("/login");
     }
   }, [token, router]);
@@ -24,17 +25,17 @@ function CompletarCadastroForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      alert("As senhas não coincidem.");
+      showToast("As senhas não coincidem.", 'error');
       return;
     }
     if (password.length < 6) {
-      alert("A senha deve ter pelo menos 6 caracteres.");
+      showToast("A senha deve ter pelo menos 6 caracteres.", 'error');
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/setup-password`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || `http://${window.location.hostname}:4000`}/api/auth/setup-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, password }),
@@ -46,7 +47,7 @@ function CompletarCadastroForm() {
         throw new Error(data.error || "Erro ao configurar senha");
       }
 
-      alert("Senha configurada com sucesso!");
+      showToast("Senha configurada com sucesso!", 'success');
       
       // Salva o token no localStorage e redireciona para o dashboard
       localStorage.setItem("pixelfood_token", data.token);
@@ -54,7 +55,7 @@ function CompletarCadastroForm() {
       
       router.push("/");
     } catch (err: any) {
-      alert(err.message);
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }

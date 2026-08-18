@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api';
 import { printFechamentoReceipt } from '@/lib/printer';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
+import { showToast } from '@/store/toastStore';
 
 export default function DashboardPage() {
   const [data, setData] = useState<any>({
@@ -102,7 +103,7 @@ export default function DashboardPage() {
       setIsClosureModalOpen(true);
     } catch (error) {
       console.error('Erro ao buscar dados do caixa:', error);
-      alert('Houve um erro ao buscar os dados de fechamento.');
+      showToast('Houve um erro ao buscar os dados de fechamento.', 'error');
     } finally {
       setIsClosing(false);
     }
@@ -214,7 +215,13 @@ export default function DashboardPage() {
                     order.status === 'IN_TRANSIT' ? 'text-purple-500' : 
                     order.status === 'DELIVERED' ? 'text-green-500' : 'text-stone-500'
                   }`}>
-                    {order.status}
+                    {{
+                      PENDING: 'Pendente',
+                      PREPARING: 'Preparando',
+                      IN_TRANSIT: 'Em entrega',
+                      DELIVERED: 'Entregue',
+                      CANCELLED: 'Cancelado'
+                    }[order.status as string] || order.status}
                   </p>
                 </div>
               </div>

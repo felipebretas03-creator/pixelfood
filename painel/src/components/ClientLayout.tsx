@@ -101,7 +101,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   };
 
   const handleCopyLink = () => {
-    const deliveryLink = `https://pixelfood-app.vercel.app/${tenant?.slug || ''}`; 
+    const frontendBase = process.env.NEXT_PUBLIC_FRONTEND_URL || `${window.location.protocol}//${window.location.hostname}:3000`;
+    const deliveryLink = `${frontendBase}/${tenant?.slug || ''}`; 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(deliveryLink).catch(() => {});
     } else {

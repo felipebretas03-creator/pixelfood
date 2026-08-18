@@ -69,14 +69,42 @@ async function main() {
     }
   ];
 
-  const firstRestaurant = await prisma.tenant.findFirst();
+  let firstRestaurant = await prisma.tenant.findFirst();
   if (!firstRestaurant) {
-    console.error('❌ Crie um restaurante primeiro.');
-    return;
+    console.log('⚠️ Nenhum restaurante encontrado. Criando "marcos-burguer" para testes...');
+    firstRestaurant = await prisma.tenant.create({
+      data: {
+        name: 'Marcos Burguer',
+        slug: 'marcos-burguer',
+      }
+    });
+  }
+
+  // Create Categories
+  const categoryIds: Record<string, string> = {};
+  for (const p of productsData) {
+    if (!categoryIds[p.categoryId]) {
+      const category = await prisma.category.create({
+        data: {
+          name: p.categoryId,
+          tenantId: firstRestaurant.id
+        }
+      });
+      categoryIds[p.categoryId] = category.id;
+    }
   }
 
   for (const p of productsData) {
-    await prisma.product.create({ data: { ...p, tenantId: firstRestaurant.id } });
+    const { price, image, categoryId, ...rest } = p;
+    await prisma.product.create({ 
+      data: { 
+        ...rest, 
+        priceCents: Math.round(price * 100),
+        imageUrl: image,
+        categoryId: categoryIds[categoryId],
+        tenantId: firstRestaurant.id 
+      } 
+    });
   }
 
   console.log('✅ Seed finalizado com sucesso!');

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import Link from "next/link";
+import { showToast } from '@/store/toastStore';
 import { 
   Search, 
   Plus, 
@@ -68,10 +69,10 @@ export default function LojasMaster() {
         setNewStore({ name: '', email: '', phone: '', document: '', planId: '' });
         fetchTenants();
       } else {
-        alert('Erro ao criar loja');
+        showToast('Erro ao criar loja', 'error');
       }
     } catch (e) {
-      alert('Erro ao criar loja');
+      showToast('Erro ao criar loja', 'error');
     } finally {
       setCreating(false);
     }

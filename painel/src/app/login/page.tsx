@@ -57,10 +57,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-stone-100">
         <div className="flex flex-col items-center mb-8">
           <img src="/logo.png" alt="PixelFood" className="h-12 w-auto mb-2 object-contain" />
-          <p className="text-stone-500 text-sm mt-1">Acesso do Lojista</p>
+          <h1 className="text-stone-500 text-sm mt-1">Acesso do Lojista</h1>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1.5 ml-1">E-mail</label>
             <input
@@ -69,6 +69,8 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-stone-50 border border-stone-200 rounded-2xl px-4 py-3.5 focus:outline-none focus:border-brand-500 focus:bg-white transition-colors text-[16px]"
               placeholder="seu@email.com"
+              required
+              autoComplete="email"
             />
           </div>
 
@@ -80,6 +82,8 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full bg-stone-50 border border-stone-200 rounded-2xl px-4 py-3.5 focus:outline-none focus:border-brand-500 focus:bg-white transition-colors text-[16px]"
+              required
+              autoComplete="current-password"
             />
           </div>
 
@@ -88,14 +92,13 @@ export default function LoginPage() {
           )}
 
           <button
-            type="button"
-            onClick={handleLogin}
+            type="submit"
             disabled={loading}
             className="w-full bg-brand-500 text-white rounded-xl py-3.5 font-bold hover:bg-brand-600 active:bg-brand-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Entrar no Painel'}
           </button>
-        </div>
+        </form>
 
         <div className="mt-8 pt-6 border-t border-stone-100 flex flex-col items-center gap-2">
           <p className="text-stone-500 text-sm font-medium">Não tem uma conta?</p>

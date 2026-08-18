@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Image as ImageIcon, Upload, Layers } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
+import { showToast } from '@/store/toastStore';
 
 interface ProductModifierOption {
   name: string;
@@ -107,7 +108,7 @@ export default function CardapioPage() {
         setFormData(prev => ({ ...prev, imageUrl: webpBase64 }));
       } catch (err) {
         console.error("Erro ao converter imagem", err);
-        alert("Erro ao processar imagem.");
+        showToast("Erro ao processar imagem.", 'error');
       }
     }
   };
@@ -171,7 +172,7 @@ export default function CardapioPage() {
       if (activeCategory === name) setActiveCategory('Todos');
       setDeleteCategoryConfirm(null);
     } catch (e: any) {
-      alert(e.message || "Erro ao excluir categoria");
+      showToast(e.message || "Erro ao excluir categoria", 'error');
       setDeleteCategoryConfirm(null);
     } finally {
       setIsDeletingCategory(false);
@@ -207,7 +208,7 @@ export default function CardapioPage() {
     if (isSaving) return;
     
     const priceNumber = parseFloat(formData.price.replace(',', '.'));
-    if (isNaN(priceNumber)) return alert("Preço inválido");
+    if (isNaN(priceNumber)) return showToast("Preço inválido", 'error');
 
     setIsSaving(true);
     const payload = {
@@ -247,7 +248,7 @@ export default function CardapioPage() {
       closeModal();
     } catch (error) {
       console.error(error);
-      alert("Erro ao salvar produto");
+      showToast("Erro ao salvar produto", 'error');
     } finally {
       setIsSaving(false);
     }
@@ -717,7 +718,7 @@ export default function CardapioPage() {
                   setNewCategoryIcon('🍽️');
                   setIsCategoryModalOpen(false);
                 } catch (err) {
-                  alert("Erro ao salvar categoria");
+                  showToast("Erro ao salvar categoria", 'error');
                 } finally {
                   setIsSavingCategory(false);
                 }

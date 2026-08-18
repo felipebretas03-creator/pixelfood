@@ -2,6 +2,7 @@
 import { Ticket, Plus, Copy, Trash2, Power, Star, Save, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
+import { showToast } from '@/store/toastStore';
 
 export default function MarketingPage() {
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -45,7 +46,7 @@ export default function MarketingPage() {
     const newLimit = parseInt(formData.limit, 10);
     
     if (formData.type !== 'DELIVERY' && (isNaN(newValue) || newValue <= 0)) {
-      return alert("Valor inválido");
+      return showToast("Valor inválido", 'error');
     }
 
     const newCouponPayload = {
@@ -71,7 +72,7 @@ export default function MarketingPage() {
       setIsModalOpen(false);
       setFormData({ code: '', type: 'PERCENTAGE', value: '', limit: '', ruleType: 'ALL', ruleCategory: 'Hambúrguer', oncePerCustomer: false });
     } catch (e) {
-      alert('Erro ao salvar cupom');
+      showToast('Erro ao salvar cupom', 'error');
     }
   };
 
@@ -162,7 +163,7 @@ export default function MarketingPage() {
               <button 
                 onClick={() => {
                   navigator.clipboard.writeText(coupon.code);
-                  alert("Código copiado!");
+                  showToast("Código copiado!", 'success');
                 }}
                 className="w-10 h-10 flex items-center justify-center rounded-xl bg-stone-100 text-stone-500 hover:text-stone-900 hover:bg-stone-200 transition-colors"
                 title="Copiar código"

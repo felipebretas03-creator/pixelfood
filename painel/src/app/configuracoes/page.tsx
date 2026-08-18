@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
+import { showToast } from '@/store/toastStore';
 
 export default function ConfiguracoesPage() {
   const [storeName, setStoreName] = useState('PixelFood Delivery');
@@ -103,7 +104,7 @@ export default function ConfiguracoesPage() {
       setTimeout(() => setIsSaved(false), 3000);
     } catch (e) {
       console.error(e);
-      alert('Erro ao salvar configurações');
+      showToast('Erro ao salvar configurações', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -128,12 +129,12 @@ export default function ConfiguracoesPage() {
     } catch (e) {
       console.error(e);
       setIsOpen(!newStatus); // Revert on error
-      alert('Erro ao alterar status da loja');
+      showToast('Erro ao alterar status da loja', 'error');
     }
   };
 
   const handleAddNeighborhood = async () => {
-    if (!newCity || !newFee) return alert('Preencha a cidade e o valor do frete');
+    if (!newCity || !newFee) return showToast('Preencha a cidade e o valor do frete', 'error');
     try {
       const res = await apiFetch('/api/neighborhoods', {
         method: 'POST',
@@ -146,10 +147,10 @@ export default function ConfiguracoesPage() {
         setNewNeighborhood('');
         setNewFee('');
       } else {
-        alert('Erro ao adicionar bairro');
+        showToast('Erro ao adicionar bairro', 'error');
       }
     } catch (err) {
-      alert('Erro de conexão');
+      showToast('Erro de conexão', 'error');
     }
   };
 
@@ -160,7 +161,7 @@ export default function ConfiguracoesPage() {
         setNeighborhoods(neighborhoods.filter(n => n.id !== id));
       }
     } catch (err) {
-      alert('Erro ao excluir bairro');
+      showToast('Erro ao excluir bairro', 'error');
     }
   };
 
@@ -187,10 +188,10 @@ export default function ConfiguracoesPage() {
       if (res.ok) {
         setLogoUrl(data.logoUrl);
       } else {
-        alert(data.error || 'Erro ao subir imagem');
+        showToast(data.error || 'Erro ao subir imagem', 'error');
       }
     } catch (err) {
-      alert('Erro de conexão ao enviar imagem');
+      showToast('Erro de conexão ao enviar imagem', 'error');
     } finally {
       setIsUploading(false);
     }
@@ -220,10 +221,10 @@ export default function ConfiguracoesPage() {
       if (res.ok) {
         setBannerUrl(data.bannerUrl);
       } else {
-        alert(data.error || 'Erro ao subir banner');
+        showToast(data.error || 'Erro ao subir banner', 'error');
       }
     } catch (err) {
-      alert('Erro de conexão ao enviar banner');
+      showToast('Erro de conexão ao enviar banner', 'error');
     } finally {
       setIsUploadingBanner(false);
     }

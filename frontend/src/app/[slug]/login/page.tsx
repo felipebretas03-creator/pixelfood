@@ -72,7 +72,7 @@ export default function LoginPage() {
         <h1 className="text-3xl font-bold text-stone-900 mb-2">Bem-vindo de volta! 👋</h1>
         <p className="text-stone-500 mb-8 font-medium">Faça login na sua conta para continuar.</p>
 
-        <div className="flex flex-col gap-4">
+        <form onSubmit={handleLogin} className="flex flex-col gap-4">
           {/* Email Input */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-bold text-stone-700 ml-1">E-mail</label>
@@ -87,6 +87,7 @@ export default function LoginPage() {
                 placeholder="seu@email.com"
                 className="w-full bg-stone-50 border border-stone-200 rounded-2xl py-4 pl-12 pr-4 text-[16px] text-stone-900 outline-none focus:border-brand-500 focus:bg-white transition-all font-medium"
                 required
+                autoComplete="email"
               />
             </div>
           </div>
@@ -105,6 +106,7 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 className="w-full bg-stone-50 border border-stone-200 rounded-2xl py-4 pl-12 pr-12 text-[16px] text-stone-900 outline-none focus:border-brand-500 focus:bg-white transition-all font-medium"
                 required
+                autoComplete="current-password"
               />
               <button 
                 type="button"
@@ -130,8 +132,7 @@ export default function LoginPage() {
 
           {/* Login Button */}
           <button 
-            type="button"
-            onClick={handleLogin}
+            type="submit"
             disabled={loading}
             className="w-full bg-brand-500 text-white font-bold py-4 rounded-2xl mt-4 hover:bg-brand-600 active:bg-brand-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
           >
@@ -141,7 +142,7 @@ export default function LoginPage() {
               "Entrar"
             )}
           </button>
-        </div>
+        </form>
 
 
 

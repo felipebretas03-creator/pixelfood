@@ -8,14 +8,14 @@ const inter = Inter({ subsets: ["latin"] });
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export const metadata: Metadata = {
   title: "Painel Lojista - PixelFood",
   description: "Gerencie seu restaurante no PixelFood",
 };
+
+import { Toaster } from "@/components/Toaster";
 
 export default function RootLayout({
   children,
@@ -26,6 +26,7 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${inter.className} bg-stone-50 min-h-screen flex flex-col text-stone-900`} suppressHydrationWarning>
         <ClientLayout>{children}</ClientLayout>
+        <Toaster />
       </body>
     </html>
   );

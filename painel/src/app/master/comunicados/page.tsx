@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { Send, Loader2, MessageSquare } from "lucide-react";
+import { showToast } from '@/store/toastStore';
 
 export default function ComunicadosMaster() {
   const [title, setTitle] = useState("");
@@ -21,13 +22,13 @@ export default function ComunicadosMaster() {
         body: JSON.stringify({ title, message, targetAudience })
       });
       if (res.ok) {
-        alert("Comunicado enfileirado com sucesso para disparo por e-mail!");
+        showToast("Comunicado enfileirado com sucesso para disparo por e-mail!", 'success');
         setTitle("");
         setMessage("");
       }
     } catch (error) {
       console.error(error);
-      alert("Erro ao enviar comunicado.");
+      showToast("Erro ao enviar comunicado.", 'error');
     } finally {
       setLoading(false);
     }

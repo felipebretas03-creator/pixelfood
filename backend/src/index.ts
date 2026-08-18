@@ -448,7 +448,7 @@ app.get('/api/settings', async (req, res) => {
   const maskedSettings = {
     ...settings,
     mpAccessToken: settings.mpAccessToken ? maskPaymentCredential(settings.mpAccessToken) : '',
-    mpPublicKey: settings.mpPublicKey ? maskPaymentCredential(settings.mpPublicKey) : '',
+    mpPublicKey: settings.mpPublicKey || '',
   };
   
   res.json(maskedSettings);
