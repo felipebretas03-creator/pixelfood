@@ -106,7 +106,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     if (isLocal) {
       defaultBase += ':3000';
     } else {
-      defaultBase = defaultBase.replace('painel-', '').replace('painel.', '');
+      defaultBase = defaultBase.replace('painel-', '').replace('-painel', '').replace('painel.', '');
     }
     const frontendBase = process.env.NEXT_PUBLIC_FRONTEND_URL || defaultBase;
     const deliveryLink = `${frontendBase}/${tenant?.slug || ''}`; 
