@@ -101,7 +101,14 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   };
 
   const handleCopyLink = () => {
-    const frontendBase = process.env.NEXT_PUBLIC_FRONTEND_URL || `${window.location.protocol}//${window.location.hostname}:3000`;
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    let defaultBase = `${window.location.protocol}//${window.location.hostname}`;
+    if (isLocal) {
+      defaultBase += ':3000';
+    } else {
+      defaultBase = defaultBase.replace('painel-', '').replace('painel.', '');
+    }
+    const frontendBase = process.env.NEXT_PUBLIC_FRONTEND_URL || defaultBase;
     const deliveryLink = `${frontendBase}/${tenant?.slug || ''}`; 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(deliveryLink).catch(() => {});
