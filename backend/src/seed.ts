@@ -76,6 +76,7 @@ async function main() {
       data: {
         name: 'Marcos Burguer',
         slug: 'marcos-burguer',
+        email: 'contato@marcosburguer.com',
       }
     });
   }
