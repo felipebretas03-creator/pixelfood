@@ -64,9 +64,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       console.log("Conectando Socket.io cliente na URL:", apiUrl);
       
-      socket = io(apiUrl, {
-        transports: ['websocket', 'polling']
-      });
+      socket = io(apiUrl);
       
       socket.on('connect', () => {
         console.log("Socket cliente conectado!", socket.id);
