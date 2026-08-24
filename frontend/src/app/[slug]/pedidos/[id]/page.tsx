@@ -61,11 +61,20 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
 
     let socket: any;
     import('socket.io-client').then(({ io }) => {
-      socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      console.log("Conectando Socket.io cliente na URL:", apiUrl);
       
-      socket.emit('join_restaurant', order.tenantId);
+      socket = io(apiUrl, {
+        transports: ['websocket', 'polling']
+      });
+      
+      socket.on('connect', () => {
+        console.log("Socket cliente conectado!", socket.id);
+        socket.emit('join_restaurant', order.tenantId);
+      });
 
       socket.on('order_status_updated', (dbOrder: any) => {
+        console.log("Evento order_status_updated recebido:", dbOrder);
         if (dbOrder.id === resolvedParams.id) {
           setOrder((prev: any) => prev ? { ...prev, status: dbOrder.status } : null);
           updateOrderStatus(dbOrder.id, dbOrder.status);
