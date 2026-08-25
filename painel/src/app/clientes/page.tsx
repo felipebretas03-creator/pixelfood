@@ -42,7 +42,7 @@ export default function ClientesPage() {
           <div>
             <h3 className="text-stone-500 text-sm font-medium mb-1">Ticket Médio Geral</h3>
             <p className="text-2xl font-bold text-stone-900">
-              R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(avgTicket)}
+              R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(avgTicket / 100)}
             </p>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function ClientesPage() {
                   <td className="p-4 font-bold text-stone-900">{customer.name}</td>
                   <td className="p-4 text-stone-600 font-medium">{customer.phone}</td>
                   <td className="p-4 font-bold text-stone-900">{customer.ordersCount}</td>
-                  <td className="p-4 font-bold text-brand-600">R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(customer.totalSpent)}</td>
+                  <td className="p-4 font-bold text-brand-600">R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(customer.totalSpent / 100)}</td>
                   <td className="p-4 text-stone-500 text-sm font-medium">
                     {customer.orders && customer.orders[0] ? new Date(customer.orders[0].createdAt).toLocaleDateString('pt-BR') : '-'}
                   </td>
