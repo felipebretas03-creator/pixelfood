@@ -170,21 +170,25 @@ export default function LojasMaster() {
 
   // ----- ACTION HANDLERS -----
 
-  const handleAction = async (action: 'suspend' | 'reactivate' | 'cancel') => {
+  const handleAction = async (action: 'suspend' | 'reactivate' | 'cancel' | 'delete') => {
     if (!selectedTenant) return;
     const tenantId = selectedTenant.id;
-    const actionNames = { suspend: 'suspender', reactivate: 'reativar', cancel: 'cancelar' };
+    const actionNames = { suspend: 'suspender', reactivate: 'reativar', cancel: 'cancelar', delete: 'EXCLUIR PERMANENTEMENTE' };
     
     openConfirmModal(
       `Confirmar Ação`,
-      `Tem certeza que deseja ${actionNames[action]} esta loja?`,
+      `Tem certeza que deseja ${actionNames[action]} esta loja?${action === 'delete' ? ' Esta ação não pode ser desfeita.' : ''}`,
       'Confirmar',
       async () => {
         closeConfirmModal();
         setActionLoading(true);
         try {
-          const res = await apiFetch(`/api/master/tenants/${tenantId}/${action}`, { method: 'POST' });
+          const res = await apiFetch(
+            action === 'delete' ? `/api/master/tenants/${tenantId}` : `/api/master/tenants/${tenantId}/${action}`,
+            { method: action === 'delete' ? 'DELETE' : 'POST' }
+          );
           if (res.ok) {
+            if (action === 'delete') setSelectedTenant(null);
             fetchTenants();
             showToast(`Ação realizada com sucesso!`, 'success');
           } else {
@@ -197,7 +201,7 @@ export default function LojasMaster() {
           setActionLoading(false);
         }
       },
-      action === 'cancel' || action === 'suspend'
+      action === 'cancel' || action === 'suspend' || action === 'delete'
     );
   };
 
@@ -615,10 +619,20 @@ export default function LojasMaster() {
                   <button 
                     onClick={() => handleAction('cancel')}
                     disabled={actionLoading}
-                    className="w-full flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50"
+                    className="w-full flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors disabled:opacity-50"
                   >
                     <Ban className="w-5 h-5" />
                     <span className="text-sm font-bold">Cancelar Assinatura</span>
+                  </button>
+
+                  {/* Excluir Loja */}
+                  <button 
+                    onClick={() => handleAction('delete')}
+                    disabled={actionLoading}
+                    className="w-full flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50 sm:col-span-2"
+                  >
+                    <AlertCircle className="w-5 h-5" />
+                    <span className="text-sm font-bold">Excluir Conta Permanentemente</span>
                   </button>
 
                 </div>

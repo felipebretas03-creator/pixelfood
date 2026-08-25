@@ -39,6 +39,8 @@ const getActionInfo = (action: string) => {
     case 'TENANT_CANCELED': 
     case 'STORE_CANCELED':
       return { label: 'Cancelamento de Assinatura', icon: Ban, color: 'text-red-600', bg: 'bg-red-100', border: 'border-red-200' };
+    case 'TENANT_DELETED':
+      return { label: 'Exclusão Permanente da Loja', icon: Store, color: 'text-red-900', bg: 'bg-red-200', border: 'border-red-300' };
     default: 
       return { label: action, icon: Activity, color: 'text-stone-600', bg: 'bg-stone-100', border: 'border-stone-200' };
   }

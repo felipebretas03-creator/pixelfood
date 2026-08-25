@@ -500,4 +500,34 @@ router.post('/tenants/:id/manual-subscription', async (req, res) => {
   }
 });
 
+// Excluir Loja (Hard Delete)
+router.delete('/tenants/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const tenant = await prisma.tenant.findUnique({ where: { id } });
+    if (!tenant) return res.status(404).json({ error: 'Loja não encontrada' });
+
+    // Deleta o tenant (Prisma cascade delete irá remover assinaturas, membros, etc)
+    await prisma.tenant.delete({
+      where: { id }
+    });
+
+    // Registrar log
+    await prisma.auditLog.create({
+      data: {
+        action: 'TENANT_DELETED',
+        actorUserId: req.user?.id,
+        tenantId: id,
+        metadata: JSON.stringify({ name: tenant.name })
+      }
+    });
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error('Erro ao excluir loja:', error);
+    res.status(500).json({ error: 'Erro interno ao excluir loja' });
+  }
+});
+
 export default router;
