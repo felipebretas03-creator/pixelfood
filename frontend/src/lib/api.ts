@@ -9,12 +9,15 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
   }
 
   if (targetUrl.startsWith(backendBase)) {
-    let slug = process.env.NEXT_PUBLIC_RESTAURANT_SLUG;
-    if (!slug && typeof window !== 'undefined') {
+    let slug = '';
+    if (typeof window !== 'undefined') {
       const parts = window.location.pathname.split('/');
       if (parts.length > 1 && parts[1] && parts[1] !== 'api' && parts[1] !== '_next') {
         slug = parts[1];
       }
+    }
+    if (!slug) {
+      slug = process.env.NEXT_PUBLIC_RESTAURANT_SLUG || '';
     }
     
     // Tenta pegar o token do usuario

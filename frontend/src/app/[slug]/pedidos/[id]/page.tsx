@@ -80,8 +80,28 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
       });
     });
 
+    // Fallback: Polling HTTP a cada 5 segundos (necessário para Vercel onde Websockets falham)
+    const interval = setInterval(() => {
+      apiFetch(`/api/orders/${resolvedParams.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.status) {
+            setOrder((prev: any) => {
+              if (prev && prev.status !== data.status) {
+                console.log("Status atualizado via Polling:", data.status);
+                updateOrderStatus(data.id, data.status);
+                return { ...prev, status: data.status };
+              }
+              return prev;
+            });
+          }
+        })
+        .catch(console.error);
+    }, 5000);
+
     return () => {
       if (socket) socket.disconnect();
+      clearInterval(interval);
     };
   }, [order?.tenantId, resolvedParams.id]);
 

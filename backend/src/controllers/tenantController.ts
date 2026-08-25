@@ -11,7 +11,7 @@ export const getSettings = async (req: Request, res: Response) => {
     settings = await prisma.settings.create({ data: { tenantId: req.tenantId! } });
   }
   
-  const { encryptPaymentCredential, maskPaymentCredential } = require('./services/cryptoService');
+  const { encryptPaymentCredential, maskPaymentCredential } = require('../services/cryptoService');
   const maskedSettings = {
     ...settings,
     mpAccessToken: settings.mpAccessToken ? maskPaymentCredential(settings.mpAccessToken) : '',
@@ -55,7 +55,7 @@ export const updateSettings = async (req: Request, res: Response) => {
     });
 
     if (mpAccessToken && !mpAccessToken.includes('••••') && mpPublicKey && !mpPublicKey.includes('••••')) {
-      const { encryptPaymentCredential } = require('./services/cryptoService');
+      const { encryptPaymentCredential } = require('../services/cryptoService');
       const encryptedAccess = encryptPaymentCredential(mpAccessToken);
       
       await prisma.tenantPaymentIntegration.upsert({

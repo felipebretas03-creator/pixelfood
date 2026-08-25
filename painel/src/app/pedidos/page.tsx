@@ -83,32 +83,44 @@ export default function PedidosKanban() {
       })
       .catch(console.error);
 
+    const fetchOrders = () => {
+      apiFetch('/api/orders')
+        .then(res => res.json())
+        .then((data: any[]) => {
+          const formatted = data.map(dbOrder => ({
+            id: dbOrder.id,
+            orderNumber: `#${dbOrder.orderNumber}`,
+            customer: dbOrder.customerNameSnapshot || 'Cliente',
+            items: dbOrder.items.map((i: any) => {
+              let str = `${i.quantity}x ${i.name}`;
+              if (i.options && i.options.length > 0) {
+                str += ` (+ ${i.options.map((opt: any) => `${opt.quantity}x ${opt.name}`).join(', ')})`;
+              }
+              if (i.observation) str += ` [Obs: ${i.observation}]`;
+              return str;
+            }),
+            contact: dbOrder.customerPhoneSnapshot || dbOrder.customer?.phone || 'Sem contato',
+            address: dbOrder.addressSnapshot || 'Retirada no Local',
+            paymentMethod: dbOrder.paymentMethod === 'PIX_APP' || dbOrder.paymentMethod === 'MERCADO_PAGO_PIX' ? 'Pix' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.changeForCents > 0 ? `Dinheiro (Troco para R$ ${((dbOrder.totalCents + dbOrder.changeForCents)/100).toFixed(2)})` : 'Dinheiro') : 'Cartão',
+            total: dbOrder.totalCents / 100,
+            status: mapStatusToFrontend(dbOrder.status),
+            time: new Date(dbOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }));
+          
+          setOrders(prev => {
+            // Se houver novos pedidos que não estão em prev, podemos disparar alerta sonoro (opcional)
+            // Aqui fazemos um replace completo, mas mantendo a estabilidade dos cards
+            return formatted;
+          });
+        })
+        .catch(console.error);
+    };
+
     // 1. Fetch initial orders
-    apiFetch('/api/orders')
-      .then(res => res.json())
-      .then((data: any[]) => {
-        const formatted = data.map(dbOrder => ({
-          id: dbOrder.id,
-          orderNumber: `#${dbOrder.orderNumber}`,
-          customer: dbOrder.customerNameSnapshot || 'Cliente',
-          items: dbOrder.items.map((i: any) => {
-            let str = `${i.quantity}x ${i.name}`;
-            if (i.options && i.options.length > 0) {
-              str += ` (+ ${i.options.map((opt: any) => `${opt.quantity}x ${opt.name}`).join(', ')})`;
-            }
-            if (i.observation) str += ` [Obs: ${i.observation}]`;
-            return str;
-          }),
-          contact: dbOrder.customerPhoneSnapshot || dbOrder.customer?.phone || 'Sem contato',
-          address: dbOrder.addressSnapshot || 'Retirada no Local',
-          paymentMethod: dbOrder.paymentMethod === 'PIX_APP' || dbOrder.paymentMethod === 'MERCADO_PAGO_PIX' ? 'Pix' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.changeForCents > 0 ? `Dinheiro (Troco para R$ ${((dbOrder.totalCents + dbOrder.changeForCents)/100).toFixed(2)})` : 'Dinheiro') : 'Cartão',
-          total: dbOrder.totalCents / 100,
-          status: mapStatusToFrontend(dbOrder.status),
-          time: new Date(dbOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }));
-        setOrders(formatted);
-      })
-      .catch(console.error);
+    fetchOrders();
+
+    // Fallback: Polling HTTP a cada 5 segundos (para Vercel)
+    const interval = setInterval(fetchOrders, 5000);
 
     // 2. Listen for realtime orders
     let socket: any;
@@ -198,6 +210,7 @@ export default function PedidosKanban() {
 
     return () => {
       isMounted = false;
+      clearInterval(interval);
       if (socket) {
         socket.off('new_order');
         socket.off('order_status_updated');

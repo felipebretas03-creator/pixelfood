@@ -25,6 +25,13 @@ export default function PedidosPage() {
   useEffect(() => {
     setMounted(true);
     fetchOrders();
+
+    // Fallback: Polling HTTP a cada 5 segundos (para Vercel onde Websockets falham)
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [fetchOrders]);
 
   const handleReorder = (order: Order) => {

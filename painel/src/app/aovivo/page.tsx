@@ -10,15 +10,42 @@ export default function AoVivoPage() {
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
+    const fetchOrders = () => {
+      apiFetch('/api/orders')
+        .then(res => res.json())
+        .then((data: any[]) => {
+          if (!isMounted) return;
+          setPedidosTotais(data.length);
+          const totalFaturamento = data.reduce((acc, order) => acc + order.total, 0);
+          
+          // Sound trigger for new orders when polling
+          setPedidosTotais(prev => {
+            if (data.length > prev && prev > 0) {
+              setPulse(true);
+              setTimeout(() => setPulse(false), 800);
+              try {
+                const w = window as any;
+                if (!w.__audioInstance) {
+                  w.__audioInstance = new Audio('/notification.mp3');
+                  w.__audioInstance.volume = 1.0;
+                }
+                w.__audioInstance.currentTime = 0;
+                w.__audioInstance.play().catch(() => {});
+              } catch(e) {}
+            }
+            return data.length;
+          });
+          
+          setFaturamento(totalFaturamento);
+        })
+        .catch(console.error);
+    };
+
     // 1. Fetch initial values
-    apiFetch('/api/orders')
-      .then(res => res.json())
-      .then((data: any[]) => {
-        setPedidosTotais(data.length);
-        const totalFaturamento = data.reduce((acc, order) => acc + order.total, 0);
-        setFaturamento(totalFaturamento);
-      })
-      .catch(console.error);
+    fetchOrders();
+
+    // Fallback: Polling HTTP a cada 5 segundos (para Vercel)
+    const interval = setInterval(fetchOrders, 5000);
 
     // 2. Listen for realtime orders
     let socket: any;
@@ -59,6 +86,7 @@ export default function AoVivoPage() {
 
     return () => {
       isMounted = false;
+      clearInterval(interval);
       if (socket) socket.disconnect();
     };
   }, []);
