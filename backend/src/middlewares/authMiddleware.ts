@@ -49,7 +49,7 @@ export const masterMiddleware = (req: Request, res: Response, next: NextFunction
     req.userId = decoded.id;
     req.userRole = decoded.role;
     
-    if (decoded.role !== 'MASTER') {
+    if (decoded.role !== 'MASTER' && !decoded.isMaster) {
       return res.status(403).json({ error: 'Proibido' });
     }
     next();
