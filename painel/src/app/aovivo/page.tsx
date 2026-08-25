@@ -15,12 +15,13 @@ export default function AoVivoPage() {
         .then(res => res.json())
         .then((data: any[]) => {
           if (!isMounted) return;
-          setPedidosTotais(data.length);
-          const totalFaturamento = data.reduce((acc, order) => acc + (Number(order.totalCents) || 0), 0) / 100;
+          const validOrders = data.filter(order => order.status !== 'CANCELLED');
+          setPedidosTotais(validOrders.length);
+          const totalFaturamento = validOrders.reduce((acc, order) => acc + (Number(order.totalCents) || 0), 0) / 100;
           
           // Sound trigger for new orders when polling
           setPedidosTotais(prev => {
-            if (data.length > prev && prev > 0) {
+            if (validOrders.length > prev && prev > 0) {
               setPulse(true);
               setTimeout(() => setPulse(false), 800);
               try {
@@ -33,7 +34,7 @@ export default function AoVivoPage() {
                 w.__audioInstance.play().catch(() => {});
               } catch(e) {}
             }
-            return data.length;
+            return validOrders.length;
           });
           
           setFaturamento(totalFaturamento);
