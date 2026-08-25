@@ -85,6 +85,7 @@ import customerRoutes from './routes/customerRoutes';
 import couponRoutes from './routes/couponRoutes';
 import checkoutRoutes from './routes/checkoutRoutes';
 import mercadopagoRouter from './routes/mercadopago';
+import webhooksRouter from './routes/webhooks';
 
 // Rate limit específico nas rotas de autenticação
 app.use('/api/auth/login', loginLimiter);
@@ -101,6 +102,7 @@ app.use('/api', customerRoutes);
 app.use('/api', couponRoutes);
 app.use('/api', checkoutRoutes);
 app.use('/api/mercadopago', mercadopagoRouter);
+app.use('/api/webhooks', webhooksRouter);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));

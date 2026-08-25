@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { logAudit } from '../services/auditService';
+import { asaasService } from '../services/asaasService';
 import axios from 'axios';
 
 const router = Router();
@@ -553,7 +554,7 @@ router.delete('/plans/:id', async (req, res) => {
   }
 });
 
-// 12. CRIAR ASSINATURA MANUAL
+// 12. CRIAR ASSINATURA NO ASAAS
 router.post('/tenants/:id/manual-subscription', async (req, res) => {
   try {
     const tenantId = req.params.id;
@@ -563,42 +564,71 @@ router.post('/tenants/:id/manual-subscription', async (req, res) => {
       return res.status(400).json({ error: 'O ID do plano é obrigatório.' });
     }
 
-    // Remover assinaturas anteriores, se houver
-    await prisma.subscription.deleteMany({
-      where: { tenantId }
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+    if (!tenant) return res.status(404).json({ error: 'Tenant não encontrado.' });
+
+    const plan = await prisma.plan.findUnique({ where: { id: planId } });
+    if (!plan) return res.status(404).json({ error: 'Plano não encontrado.' });
+
+    // Verificar se tem customer no Asaas, se não, cria.
+    let customerId = '';
+    const existingSub = await prisma.subscription.findFirst({ where: { tenantId } });
+    
+    if (existingSub && existingSub.providerCustomerId) {
+      customerId = existingSub.providerCustomerId;
+    } else {
+      const asaasCustomer = await asaasService.createCustomer({
+        name: tenant.name,
+        email: tenant.email,
+        cpfCnpj: tenant.cpfCnpj || undefined,
+        phone: tenant.phone || undefined
+      });
+      customerId = asaasCustomer.id;
+    }
+
+    // Criar assinatura no Asaas
+    const asaasSub = await asaasService.createSubscription(customerId, {
+      value: plan.priceCents / 100, // asaas uses reais (float)
+      cycle: plan.billingCycle,
+      description: `Assinatura ${plan.name} - PixelFood`
     });
 
-    // Criar nova assinatura
-    const now = new Date();
-    const currentPeriodEnd = new Date(now);
-    currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1); // 1 mes padrao, ou poderia ser null
+    // Remover assinaturas anteriores no nosso banco
+    if (existingSub) {
+      await prisma.subscription.deleteMany({ where: { tenantId } });
+      if (existingSub.providerSubscriptionId && !existingSub.providerSubscriptionId.startsWith('sub_simulated')) {
+        await asaasService.cancelSubscription(existingSub.providerSubscriptionId).catch(console.error);
+      }
+    }
 
+    // Criar nova assinatura no banco apontando para o Asaas
     const subscription = await prisma.subscription.create({
       data: {
         tenantId,
         planId,
-        provider: 'MANUAL',
-        status: 'ACTIVE',
-        currentPeriodStart: now,
-        currentPeriodEnd: currentPeriodEnd
+        provider: 'ASAAS',
+        providerCustomerId: customerId,
+        providerSubscriptionId: asaasSub.id,
+        status: 'PENDING', // Ficará ativo quando o webhook receber o pagamento
       }
     });
 
-    const tenant = await prisma.tenant.update({
+    const updatedTenant = await prisma.tenant.update({
       where: { id: tenantId },
-      data: { subscriptionStatus: 'ACTIVE', lifetimeExpiresAt: null }
+      data: { subscriptionStatus: 'PENDING', lifetimeExpiresAt: null }
     });
 
     const user = (req as any).user;
     await logAudit('PLAN_CHANGED', user.id, tenantId, { 
-      newPlan: 'ACTIVE',
+      newPlan: plan.name,
       planId,
-      reason: 'Manual subscription created by master'
+      reason: 'Asaas subscription created by master'
     });
     
-    res.json({ tenant, subscription });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao criar assinatura manual' });
+    res.json({ tenant: updatedTenant, subscription });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: error.message || 'Erro ao gerar assinatura' });
   }
 });
 
