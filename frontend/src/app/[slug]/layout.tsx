@@ -48,30 +48,24 @@ export default async function SlugLayout({
     }
   } catch (err) {}
 
+  let safeColor = '#10b981';
+  if (settings?.primaryColor) {
+    safeColor = /^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/.test(settings.primaryColor)
+      ? settings.primaryColor
+      : '#10b981';
+  }
+
   return (
-    <>
-      <head>
-        {settings?.primaryColor && (() => {
-          // Sanitização: aceita apenas cores hex válidas (#rrggbb ou #rgb)
-          const safeColor = /^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/.test(settings.primaryColor)
-            ? settings.primaryColor
-            : '#10b981'; // Cor padrão (verde PixelFood)
-          return (
-            <style dangerouslySetInnerHTML={{__html: `
-              :root, html, body {
-                --color-brand-50: ${safeColor}15 !important;
-                --color-brand-100: ${safeColor}30 !important;
-                --color-brand-200: ${safeColor}50 !important;
-                --color-brand-500: ${safeColor} !important;
-                --color-brand-600: ${safeColor} !important;
-              }
-            `}} />
-          );
-        })()}
-      </head>
+    <div style={{
+      '--color-brand-50': `${safeColor}15`,
+      '--color-brand-100': `${safeColor}30`,
+      '--color-brand-200': `${safeColor}50`,
+      '--color-brand-500': safeColor,
+      '--color-brand-600': safeColor,
+    } as React.CSSProperties} className="flex flex-col min-h-screen w-full">
       {children}
       <Toaster />
       <BottomNavigation />
-    </>
+    </div>
   );
 }
