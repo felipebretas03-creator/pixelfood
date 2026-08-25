@@ -2,6 +2,8 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { io } from '../index';
+import { calculateOrderTotal } from '../services/orderValidator';
+import { MercadoPagoConfig, Payment } from 'mercadopago';
 
 export const createPixCheckout = async (req: Request, res: Response) => {
   try {

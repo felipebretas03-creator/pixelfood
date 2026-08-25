@@ -34,5 +34,11 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
   };
 
-  return fetch(finalUrl, { ...options, headers });
+  const fetchOptions: RequestInit = {
+    cache: 'no-store', // Disable aggressive caching by Next.js/Browsers
+    ...options,
+    headers
+  };
+
+  return fetch(finalUrl, fetchOptions);
 };

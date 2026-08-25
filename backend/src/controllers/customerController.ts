@@ -1,6 +1,7 @@
 
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
+import jwt from 'jsonwebtoken';
 
 export const updateProfile = async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
@@ -91,7 +92,7 @@ export const deleteAddress = async (req: Request, res: Response) => {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     if (decoded.role !== 'customer') return res.status(403).json({ error: 'Proibido' });
     
-    const { id } = req.params;
+    const id = req.params.id as string;
     
     const address = await prisma.customerAddress.findUnique({ where: { id } });
     if (!address || address.customerId !== decoded.id) {

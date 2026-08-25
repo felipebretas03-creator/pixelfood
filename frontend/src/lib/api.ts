@@ -47,7 +47,7 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
       ...(slug ? { 'x-restaurant-slug': slug } : {}),
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     };
-    return fetch(finalUrl, { ...options, headers });
+    return fetch(finalUrl, { cache: 'no-store', ...options, headers });
   }
-  return fetch(url, options);
+  return fetch(url, { cache: 'no-store', ...options });
 };

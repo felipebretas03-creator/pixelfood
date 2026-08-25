@@ -1,5 +1,5 @@
 
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/database';
 
 export const getRestaurants = async (req: Request, res: Response) => {
