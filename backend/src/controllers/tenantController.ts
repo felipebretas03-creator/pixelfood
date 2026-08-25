@@ -1,0 +1,334 @@
+
+import { Request, Response } from 'express';
+import { prisma } from '../config/database';
+import { supabase } from '../config/supabase';
+
+export const getSettings = async (req: Request, res: Response) => {
+  let settings = await prisma.settings.findUnique({
+    where: { tenantId: req.tenantId! }
+  });
+  if (!settings) {
+    settings = await prisma.settings.create({ data: { tenantId: req.tenantId! } });
+  }
+  
+  const { encryptPaymentCredential, maskPaymentCredential } = require('./services/cryptoService');
+  const maskedSettings = {
+    ...settings,
+    mpAccessToken: settings.mpAccessToken ? maskPaymentCredential(settings.mpAccessToken) : '',
+    mpPublicKey: settings.mpPublicKey || '',
+  };
+  
+  res.json(maskedSettings);
+};
+
+export const updateSettings = async (req: Request, res: Response) => {
+  try {
+    const { 
+      storeName, primaryColor, deliveryType, deliveryFee, isOpen, 
+      mpAccessToken, mpPublicKey, 
+      acceptPix, acceptCreditCardOnline, acceptCardMachine, acceptCash 
+    } = req.body;
+    
+    let settings = await prisma.settings.findUnique({
+      where: { tenantId: req.tenantId! }
+    });
+    
+    if (!settings) {
+      settings = await prisma.settings.create({ data: { tenantId: req.tenantId! } });
+    }
+
+    const updated = await prisma.settings.update({
+      where: { tenantId: req.tenantId! },
+      data: {
+        storeName: storeName !== undefined ? storeName : settings.storeName,
+        primaryColor: primaryColor !== undefined ? primaryColor : settings.primaryColor,
+        deliveryType: deliveryType !== undefined ? deliveryType : settings.deliveryType,
+        deliveryFee: deliveryFee !== undefined ? Number(deliveryFee) : settings.deliveryFee,
+        isOpen: isOpen !== undefined ? isOpen : settings.isOpen,
+        mpAccessToken: (mpAccessToken && !mpAccessToken.includes('••••')) ? mpAccessToken : settings.mpAccessToken,
+        mpPublicKey: (mpPublicKey && !mpPublicKey.includes('••••')) ? mpPublicKey : settings.mpPublicKey,
+        acceptPix: acceptPix !== undefined ? acceptPix : settings.acceptPix,
+        acceptCreditCardOnline: acceptCreditCardOnline !== undefined ? acceptCreditCardOnline : settings.acceptCreditCardOnline,
+        acceptCardMachine: acceptCardMachine !== undefined ? acceptCardMachine : settings.acceptCardMachine,
+        acceptCash: acceptCash !== undefined ? acceptCash : settings.acceptCash,
+      }
+    });
+
+    if (mpAccessToken && !mpAccessToken.includes('••••') && mpPublicKey && !mpPublicKey.includes('••••')) {
+      const { encryptPaymentCredential } = require('./services/cryptoService');
+      const encryptedAccess = encryptPaymentCredential(mpAccessToken);
+      
+      await prisma.tenantPaymentIntegration.upsert({
+        where: { tenantId_provider: { tenantId: req.tenantId!, provider: 'MERCADO_PAGO' } },
+        update: {
+          publicKey: mpPublicKey,
+          encryptedAccessToken: encryptedAccess,
+          status: 'CONNECTED',
+          connectionMethod: 'MANUAL_CREDENTIALS',
+          connectedAt: new Date()
+        },
+        create: {
+          tenantId: req.tenantId!,
+          provider: 'MERCADO_PAGO',
+          publicKey: mpPublicKey,
+          encryptedAccessToken: encryptedAccess,
+          status: 'CONNECTED',
+          connectionMethod: 'MANUAL_CREDENTIALS',
+          connectedAt: new Date()
+        }
+      });
+    }
+
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: 'Erro ao atualizar configurações' });
+  }
+};
+
+export const uploadLogo = async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'Nenhum arquivo enviado' });
+      return;
+    }
+
+    const file = req.file;
+    // Clean original name (remove spaces and special chars)
+    const cleanName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+    const fileName = `${req.tenantId}_${Date.now()}_${cleanName}`;
+
+    const { data, error } = await supabase
+      .storage
+      .from('uploads')
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true
+      });
+
+    if (error) {
+      console.error('Supabase Storage Error:', error);
+      res.status(500).json({ error: 'Erro ao fazer upload da imagem' });
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
+    const logoUrl = publicUrlData.publicUrl;
+
+    const updated = await prisma.settings.update({
+      where: { tenantId: req.tenantId! },
+      data: { logoUrl }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro no servidor durante upload' });
+  }
+};
+// --- Settings Banner Upload ---
+export const uploadBanner = async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'Nenhum arquivo enviado' });
+      return;
+    }
+
+    const file = req.file;
+    const cleanName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+    const fileName = `${req.tenantId}_banner_${Date.now()}_${cleanName}`;
+
+    const { data, error } = await supabase
+      .storage
+      .from('uploads')
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true
+      });
+
+    if (error) {
+      console.error('Supabase Storage Error:', error);
+      res.status(500).json({ error: 'Erro ao fazer upload do banner' });
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
+    const bannerUrl = publicUrlData.publicUrl;
+
+    const updated = await prisma.settings.update({
+      where: { tenantId: req.tenantId! },
+      data: { bannerUrl }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro no servidor durante upload' });
+  }
+};
+
+// --- Neighborhood Fees ---
+export const getNeighborhoods = async (req: Request, res: Response) => {
+  try {
+    const neighborhoods = await prisma.neighborhoodFee.findMany({
+      where: { tenantId: req.tenantId! },
+      orderBy: [{ city: 'asc' }, { neighborhood: 'asc' }]
+    });
+    res.json(neighborhoods);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar bairros' });
+  }
+};
+
+export const createNeighborhood = async (req: Request, res: Response) => {
+  try {
+    const { city, neighborhood, fee } = req.body;
+    const created = await prisma.neighborhoodFee.create({
+      data: {
+        tenantId: req.tenantId!,
+        city,
+        neighborhood,
+        fee: parseFloat(fee)
+      }
+    });
+    res.status(201).json(created);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: 'Erro ao criar bairro. Talvez já exista.' });
+  }
+};
+
+export const deleteNeighborhood = async (req: Request, res: Response) => {
+  try {
+    const neighborhood = await prisma.neighborhoodFee.findUnique({ where: { id: req.params.id as string } });
+    if (!neighborhood || neighborhood.tenantId !== req.tenantId) {
+       res.status(404).json({ error: 'Not found' });
+       return;
+    }
+    await prisma.neighborhoodFee.delete({
+      where: { id: req.params.id as string }
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: 'Erro ao deletar bairro' });
+  }
+};
+
+// --- Categories ---
+
+export const getDashboard = async (req: Request, res: Response) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: { tenantId: req.tenantId!, status: { not: 'CANCELLED' } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const totalRevenue = orders.reduce((acc, order) => acc + order.totalCents, 0) / 100;
+    const totalOrders = orders.length;
+    
+    const chartData = [
+      { name: 'Seg', vendas: 0 },
+      { name: 'Ter', vendas: 0 },
+      { name: 'Qua', vendas: 0 },
+      { name: 'Qui', vendas: 0 },
+      { name: 'Sex', vendas: 0 },
+      { name: 'Sáb', vendas: 0 },
+      { name: 'Dom', vendas: 0 },
+    ];
+    
+    orders.forEach(order => {
+      const dayIndex = new Date(order.createdAt).getDay();
+      const mappedIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+      if(chartData[mappedIndex]) chartData[mappedIndex].vendas += (order.totalCents / 100);
+    });
+
+    res.json({
+      totalRevenue,
+      totalOrders,
+      averageTicket: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+      chartData,
+      recentOrders: orders.slice(0, 5).map(o => ({ ...o, total: o.totalCents / 100 }))
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao carregar dashboard' });
+  }
+};
+
+export const getDashboardFechamento = async (req: Request, res: Response) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const orders = await prisma.order.findMany({
+      where: {
+        tenantId: req.tenantId!,
+        status: { not: 'CANCELLED' },
+        createdAt: {
+          gte: today,
+          lt: tomorrow
+        }
+      }
+    });
+
+    const totalRevenue = orders.reduce((acc, order) => acc + order.totalCents, 0) / 100;
+    const totalOrders = orders.length;
+
+    let pix = 0;
+    let cash = 0;
+    let card = 0;
+
+    orders.forEach(order => {
+      if (order.paymentMethod === 'PIX_APP' || order.paymentMethod === 'MERCADO_PAGO_PIX') pix += (order.totalCents / 100);
+      else if (order.paymentMethod === 'CASH') cash += (order.totalCents / 100);
+      else card += (order.totalCents / 100);
+    });
+
+    res.json({
+      date: new Date().toISOString(),
+      totalRevenue,
+      totalOrders,
+      byMethod: { pix, cash, card }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao gerar fechamento' });
+  }
+};
+
+// --- Customers (CRM) ---
+
+export const getLoyalty = async (req: Request, res: Response) => {
+  let settings = await prisma.loyaltySettings.findUnique({
+    where: { tenantId: req.tenantId! }
+  });
+  if (!settings) {
+    settings = await prisma.loyaltySettings.create({ data: { tenantId: req.tenantId! } });
+  }
+  res.json(settings);
+};
+
+export const updateLoyalty = async (req: Request, res: Response) => {
+  try {
+    let settings = await prisma.loyaltySettings.findUnique({
+      where: { tenantId: req.tenantId! }
+    });
+    if (!settings) {
+      settings = await prisma.loyaltySettings.create({ data: { tenantId: req.tenantId! } });
+    }
+    const updated = await prisma.loyaltySettings.update({
+      where: { tenantId: req.tenantId! },
+      data: req.body
+    });
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ error: 'Erro ao atualizar fidelidade' });
+  }
+};
+
+// ==========================================
+// CAKTO WEBHOOK - Aprovação de Pagamentos
+// ==========================================
