@@ -36,7 +36,7 @@ export default function MasterLayout({ children }: { children: React.ReactNode }
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col text-stone-900">
+    <div className={`min-h-screen flex flex-col ${pathname === '/master' ? 'bg-stone-950 text-stone-300' : 'bg-stone-50 text-stone-900'}`}>
       {/* Top Header */}
       <header className="bg-stone-900 text-white border-b border-stone-800 sticky top-0 z-50 shadow-sm">
         <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
@@ -99,7 +99,7 @@ export default function MasterLayout({ children }: { children: React.ReactNode }
       </nav>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-[1400px] w-full mx-auto px-6 py-8 pb-24 md:pb-8">
+      <main className={`flex-1 max-w-[1400px] w-full mx-auto pb-24 md:pb-8 ${pathname === '/master' ? 'px-4 py-6 md:px-8 md:py-10' : 'px-6 py-8'}`}>
         {children}
       </main>
     </div>

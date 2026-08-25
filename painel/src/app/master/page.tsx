@@ -73,7 +73,7 @@ export default function MasterDashboard() {
   const hasAlerts = data.pastDue > 0;
 
   return (
-    <div className="p-6 bg-stone-950 rounded-2xl min-h-[calc(100vh-8rem)] text-stone-300 font-mono border border-stone-800 shadow-2xl relative overflow-hidden">
+    <div className="w-full bg-transparent min-h-[calc(100vh-8rem)] text-stone-300 font-mono relative overflow-hidden">
       {/* Background glow effects */}
       <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] bg-brand-500/10 blur-[120px] rounded-full pointer-events-none"></div>
       <div className="absolute bottom-[-10%] left-[-5%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none"></div>
