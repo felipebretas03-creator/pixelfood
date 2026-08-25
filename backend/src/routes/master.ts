@@ -517,7 +517,7 @@ router.delete('/tenants/:id', async (req, res) => {
     await prisma.auditLog.create({
       data: {
         action: 'TENANT_DELETED',
-        actorUserId: req.user?.id,
+        actorUserId: (req as any).user?.id,
         tenantId: id,
         metadata: JSON.stringify({ name: tenant.name })
       }
