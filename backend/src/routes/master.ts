@@ -123,6 +123,23 @@ router.get('/tenants/:id', async (req, res) => {
   }
 });
 
+// 3.2 ATUALIZAR LOJA
+router.put('/tenants/:id', async (req, res) => {
+  try {
+    const { name, email, cpfCnpj, phone } = req.body;
+    const tenant = await prisma.tenant.update({
+      where: { id: req.params.id },
+      data: { name, email, cpfCnpj, phone }
+    });
+    const user = (req as any).user;
+    await logAudit('STORE_UPDATED', user.id, tenant.id, { name, cpfCnpj });
+    res.json(tenant);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao atualizar loja' });
+  }
+});
+
 // 3.5 ATIVIDADE DA LOJA
 router.get('/tenants/:id/activity', async (req, res) => {
   try {

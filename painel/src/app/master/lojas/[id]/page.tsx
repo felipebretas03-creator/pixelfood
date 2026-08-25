@@ -76,6 +76,10 @@ export default function LojaDetalhes() {
   const [planInput, setPlanInput] = useState('');
   const [activity, setActivity] = useState<{ orders: any[], logs: any[] } | null>(null);
   const [plans, setPlans] = useState<any[]>([]);
+
+  // Edit Tenant State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', email: '', cpfCnpj: '', phone: '' });
   
   // Custom Modal State
   const [modalState, setModalState] = useState<{
@@ -147,11 +151,37 @@ export default function LojaDetalhes() {
   const fetchTenant = async () => {
     try {
       const res = await apiFetch(`/api/master/tenants/${id}`);
-      if (res.ok) setTenant(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setTenant(data);
+        setEditForm({ name: data.name, email: data.email, cpfCnpj: data.cpfCnpj || '', phone: data.phone || '' });
+      }
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActionLoading(true);
+    try {
+      const res = await apiFetch(`/api/master/tenants/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(editForm)
+      });
+      if (res.ok) {
+        fetchTenant();
+        setIsEditModalOpen(false);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        openAlertModal("Ops!", err.error || "Erro ao atualizar loja.", true);
+      }
+    } catch (error: any) {
+      openAlertModal("Ops!", error.message || "Erro de conexão.", true);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -429,7 +459,15 @@ export default function LojaDetalhes() {
         {activeTab === 'visao-geral' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <h3 className="font-bold text-lg text-stone-900 border-b border-stone-100 pb-2">Dados da Empresa</h3>
+              <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                <h3 className="font-bold text-lg text-stone-900">Dados da Empresa</h3>
+                <button 
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="text-xs px-3 py-1 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg font-bold transition-colors"
+                >
+                  Editar
+                </button>
+              </div>
               <div className="grid grid-cols-3 gap-2 text-sm">
                 <span className="text-stone-500 font-medium">Nome</span>
                 <span className="col-span-2 font-semibold text-stone-900">{tenant.name}</span>
@@ -749,6 +787,78 @@ export default function LojaDetalhes() {
                 {modalState.confirmText}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Tenant Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            <div className="px-6 py-5 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
+              <h2 className="text-lg font-black text-stone-900">Editar Loja</h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-stone-400 hover:text-stone-600 transition-colors bg-white rounded-full p-1.5 shadow-sm border border-stone-200">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleEditSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-1">Nome da Empresa</label>
+                <input 
+                  type="text" 
+                  required
+                  value={editForm.name}
+                  onChange={e => setEditForm({...editForm, name: e.target.value})}
+                  className="w-full border border-stone-200 rounded-xl px-4 py-2.5 outline-none focus:border-brand-500 transition-all font-medium text-stone-800"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-1">E-mail</label>
+                <input 
+                  type="email" 
+                  required
+                  value={editForm.email}
+                  onChange={e => setEditForm({...editForm, email: e.target.value})}
+                  className="w-full border border-stone-200 rounded-xl px-4 py-2.5 outline-none focus:border-brand-500 transition-all font-medium text-stone-800"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-1">CPF ou CNPJ</label>
+                <input 
+                  type="text" 
+                  value={editForm.cpfCnpj}
+                  onChange={e => setEditForm({...editForm, cpfCnpj: e.target.value})}
+                  className="w-full border border-stone-200 rounded-xl px-4 py-2.5 outline-none focus:border-brand-500 transition-all font-medium text-stone-800"
+                  placeholder="Somente números"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-1">WhatsApp / Telefone</label>
+                <input 
+                  type="text" 
+                  value={editForm.phone}
+                  onChange={e => setEditForm({...editForm, phone: e.target.value})}
+                  className="w-full border border-stone-200 rounded-xl px-4 py-2.5 outline-none focus:border-brand-500 transition-all font-medium text-stone-800"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-stone-100 flex justify-end gap-3">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 rounded-xl font-bold text-stone-600 hover:bg-stone-100 transition-colors">
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={actionLoading}
+                  className="px-5 py-2.5 rounded-xl font-bold text-white bg-brand-600 hover:bg-brand-700 transition-colors disabled:opacity-50"
+                >
+                  {actionLoading ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
