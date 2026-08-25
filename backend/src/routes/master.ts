@@ -574,7 +574,7 @@ router.post('/tenants/:id/manual-subscription', async (req, res) => {
     let customerId = '';
     const existingSub = await prisma.subscription.findFirst({ where: { tenantId } });
     
-    if (existingSub && existingSub.providerCustomerId) {
+    if (existingSub && existingSub.providerCustomerId && !existingSub.providerCustomerId.startsWith('cus_simulated')) {
       customerId = existingSub.providerCustomerId;
     } else {
       const asaasCustomer = await asaasService.createCustomer({
