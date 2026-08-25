@@ -538,7 +538,15 @@ export default function LojaDetalhes() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <h3 className="font-bold text-lg text-stone-900 border-b border-stone-100 pb-2">Plano Vigente</h3>
+                  <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                    <h3 className="font-bold text-lg text-stone-900">Plano Vigente</h3>
+                    <button 
+                      onClick={handleManualSubscription}
+                      className="text-xs px-3 py-1 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg font-bold transition-colors"
+                    >
+                      Trocar Plano
+                    </button>
+                  </div>
                   <div className="bg-stone-50 rounded-xl p-4 border border-stone-200">
                     <div className="text-sm font-bold text-brand-600 uppercase tracking-widest mb-1">{sub.plan?.name || 'Customizado'}</div>
                     <div className="text-3xl font-black text-stone-900 mb-4">
