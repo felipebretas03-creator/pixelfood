@@ -58,12 +58,12 @@ export default async function SlugLayout({
             : '#10b981'; // Cor padrão (verde PixelFood)
           return (
             <style dangerouslySetInnerHTML={{__html: `
-              :root {
-                --color-brand-50: ${safeColor}15;
-                --color-brand-100: ${safeColor}30;
-                --color-brand-200: ${safeColor}50;
-                --color-brand-500: ${safeColor};
-                --color-brand-600: ${safeColor};
+              :root, html, body {
+                --color-brand-50: ${safeColor}15 !important;
+                --color-brand-100: ${safeColor}30 !important;
+                --color-brand-200: ${safeColor}50 !important;
+                --color-brand-500: ${safeColor} !important;
+                --color-brand-600: ${safeColor} !important;
               }
             `}} />
           );
