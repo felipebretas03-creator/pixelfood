@@ -35,7 +35,7 @@ export default function LojasMaster() {
 
   const fetchPlans = async () => {
     try {
-      const res = await apiFetch('/api/plans'); // adjust if master has a different route
+      const res = await apiFetch('/api/master/plans');
       if (res.ok) setPlans(await res.json());
     } catch(e) {}
   };
