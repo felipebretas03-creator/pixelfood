@@ -12,6 +12,8 @@ export default function CadastroPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [cpfCnpj, setCpfCnpj] = useState("");
+  const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -23,7 +25,7 @@ export default function CadastroPage() {
       const res = await fetch(`${backendBase}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, cpfCnpj, phone }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -86,6 +88,32 @@ export default function CadastroPage() {
                 className="w-full bg-stone-950/50 border border-stone-800 rounded-xl px-4 py-3.5 text-sm font-medium text-white outline-none focus:border-brand-500 focus:bg-stone-900 transition-all placeholder:text-stone-600"
                 placeholder="contato@restaurante.com"
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-bold text-stone-300 mb-2 pl-1">CPF ou CNPJ</label>
+                <input 
+                  required
+                  type="text" 
+                  value={cpfCnpj}
+                  onChange={(e) => setCpfCnpj(e.target.value)}
+                  className="w-full bg-stone-950/50 border border-stone-800 rounded-xl px-4 py-3.5 text-sm font-medium text-white outline-none focus:border-brand-500 focus:bg-stone-900 transition-all placeholder:text-stone-600"
+                  placeholder="Apenas números"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-300 mb-2 pl-1">WhatsApp</label>
+                <input 
+                  required
+                  type="text" 
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full bg-stone-950/50 border border-stone-800 rounded-xl px-4 py-3.5 text-sm font-medium text-white outline-none focus:border-brand-500 focus:bg-stone-900 transition-all placeholder:text-stone-600"
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
             </div>
 
             <div>

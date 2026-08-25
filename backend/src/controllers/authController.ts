@@ -4,8 +4,8 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database';
 
 export const registerOwner = async (req: Request, res: Response) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+  const { name, email, password, cpfCnpj, phone } = req.body;
+  if (!name || !email || !password || !cpfCnpj || !phone) return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
 
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -26,6 +26,8 @@ export const registerOwner = async (req: Request, res: Response) => {
       data: {
         name,
         email,
+        cpfCnpj,
+        phone,
         slug: finalSlug,
         settings: { create: { storeName: name } }
       }
