@@ -577,10 +577,14 @@ router.post('/tenants/:id/manual-subscription', async (req, res) => {
     if (existingSub && existingSub.providerCustomerId && !existingSub.providerCustomerId.startsWith('cus_simulated')) {
       customerId = existingSub.providerCustomerId;
     } else {
+      if (!tenant.cpfCnpj || tenant.cpfCnpj.trim() === '') {
+        return res.status(400).json({ error: 'Para criar uma fatura no Asaas, a loja precisa ter um CPF ou CNPJ cadastrado.' });
+      }
+
       const asaasCustomer = await asaasService.createCustomer({
         name: tenant.name,
         email: tenant.email,
-        cpfCnpj: tenant.cpfCnpj || undefined,
+        cpfCnpj: tenant.cpfCnpj,
         phone: tenant.phone || undefined
       });
       customerId = asaasCustomer.id;
