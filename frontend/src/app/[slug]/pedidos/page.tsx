@@ -99,7 +99,7 @@ export default function PedidosPage() {
           </button>
         ) : (
           <Link 
-            href={`/pedidos/${order.id}`}
+            href={`/${slug}/pedidos/${order.id}`}
             className="w-full bg-brand-500 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-[0.98] transition-transform"
           >
             Acompanhar Pedido

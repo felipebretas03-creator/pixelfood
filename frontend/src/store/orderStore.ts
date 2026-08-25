@@ -56,7 +56,29 @@ export const useOrderStore = create<OrderState>()(
           const response = await apiFetch('/api/customer/orders');
           if (response.ok) {
             const data = await response.json();
-            set({ orders: data });
+            const mappedOrders = data.map((dbOrder: any) => ({
+              id: dbOrder.id,
+              tenantId: dbOrder.tenantId,
+              orderNumber: dbOrder.orderNumber,
+              date: dbOrder.createdAt,
+              status: dbOrder.status,
+              total: dbOrder.totalCents / 100,
+              items: dbOrder.items.map((i: any) => ({
+                ...i,
+                price: i.priceCents / 100,
+              })),
+              paymentMethod: dbOrder.paymentMethod,
+              needsChange: dbOrder.paymentMethod === 'CASH' && dbOrder.changeForCents > 0,
+              changeAmount: dbOrder.paymentMethod === 'CASH' && dbOrder.changeForCents > 0 ? ((dbOrder.totalCents + dbOrder.changeForCents)/100).toFixed(2) : undefined,
+              address: dbOrder.addressSnapshot ? {
+                street: dbOrder.addressSnapshot,
+                number: '',
+                neighborhood: '',
+                city: ''
+              } : undefined,
+              observation: dbOrder.notes
+            }));
+            set({ orders: mappedOrders });
           }
         } catch (error) {
           console.error("Failed to fetch orders:", error);
