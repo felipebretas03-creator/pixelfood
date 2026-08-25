@@ -92,7 +92,7 @@ export const mercadoPagoWebhook = async (req: Request, res: Response) => {
 
     const client = new MercadoPagoConfig({ accessToken: settings.mpAccessToken });
     const payment = new Payment(client);
-    const paymentInfo = await payment.get({ id: paymentId });
+    const paymentInfo = await payment.get({ id: paymentId as string });
 
     if (paymentInfo.status === 'approved') {
       const orderId = paymentInfo.external_reference;
