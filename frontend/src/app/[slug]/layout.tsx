@@ -2,6 +2,9 @@ import { Toaster } from "@/components/Toaster";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Metadata } from "next";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
   let title = "Delivery App";
