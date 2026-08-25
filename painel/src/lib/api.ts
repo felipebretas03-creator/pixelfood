@@ -19,7 +19,6 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
     }
   } catch (e) {}
 
-  // Automaticamente troca 'localhost' pelo IP real do celular/dispositivo na rede local (apenas dev)
   let finalUrl = targetUrl;
   if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_URL && targetUrl.includes('localhost')) {
     finalUrl = targetUrl.replace('localhost', window.location.hostname);
@@ -35,10 +34,29 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
   };
 
   const fetchOptions: RequestInit = {
-    cache: 'no-store', // Disable aggressive caching by Next.js/Browsers
+    cache: 'no-store',
     ...options,
     headers
   };
 
-  return fetch(finalUrl, fetchOptions);
+  try {
+    const res = await fetch(finalUrl, fetchOptions);
+    if (!res.ok && options.method !== 'GET') {
+      const errorText = await res.text();
+      console.error(`API Error on ${options.method} ${finalUrl}: ${res.status} - ${errorText}`);
+      if (typeof window !== 'undefined') {
+        alert(`API Error: ${res.status} - ${errorText}`);
+      }
+      throw new Error(`API Error: ${res.status} - ${errorText}`);
+    }
+    return res;
+  } catch (error: any) {
+    if (options.method !== 'GET') {
+      console.error(`Network Error on ${options.method} ${finalUrl}:`, error);
+      if (typeof window !== 'undefined' && !error.message.includes('API Error')) {
+        alert(`Network Error: ${error.message}. Is the backend running at ${finalUrl}?`);
+      }
+    }
+    throw error;
+  }
 };
