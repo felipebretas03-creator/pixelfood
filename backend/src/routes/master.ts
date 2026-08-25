@@ -444,10 +444,112 @@ router.post('/tenants/:id/revoke-lifetime', async (req, res) => {
 // 11. LISTAR PLANOS
 router.get('/plans', async (req, res) => {
   try {
-    const plans = await prisma.plan.findMany({ where: { isActive: true } });
+    const { all } = req.query;
+    const where = all === 'true' ? {} : { isActive: true };
+    const plans = await prisma.plan.findMany({ where, orderBy: { priceCents: 'asc' } });
     res.json(plans);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar planos' });
+  }
+});
+
+// CRIAR PLANO
+router.post('/plans', async (req, res) => {
+  try {
+    const { name, code, priceCents, billingCycle, features, isActive } = req.body;
+    
+    // Check if code exists
+    const existing = await prisma.plan.findUnique({ where: { code } });
+    if (existing) return res.status(400).json({ error: 'Código de plano já existe' });
+
+    const plan = await prisma.plan.create({
+      data: {
+        name,
+        code,
+        priceCents,
+        billingCycle: billingCycle || 'MONTHLY',
+        features,
+        isActive: isActive !== undefined ? isActive : true
+      }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        action: 'PLAN_CREATED',
+        actorUserId: (req as any).user?.id,
+        metadata: JSON.stringify({ planCode: code, name })
+      }
+    });
+
+    res.json(plan);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao criar plano' });
+  }
+});
+
+// ATUALIZAR PLANO
+router.put('/plans/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, code, priceCents, billingCycle, features, isActive } = req.body;
+
+    if (code) {
+      const existing = await prisma.plan.findFirst({ where: { code, id: { not: id } } });
+      if (existing) return res.status(400).json({ error: 'Código de plano já existe' });
+    }
+
+    const plan = await prisma.plan.update({
+      where: { id },
+      data: {
+        ...(name && { name }),
+        ...(code && { code }),
+        ...(priceCents !== undefined && { priceCents }),
+        ...(billingCycle && { billingCycle }),
+        ...(features !== undefined && { features }),
+        ...(isActive !== undefined && { isActive }),
+      }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        action: 'PLAN_UPDATED',
+        actorUserId: (req as any).user?.id,
+        metadata: JSON.stringify({ planCode: plan.code, name: plan.name })
+      }
+    });
+
+    res.json(plan);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao atualizar plano' });
+  }
+});
+
+// DELETAR PLANO
+router.delete('/plans/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const count = await prisma.subscription.count({ where: { planId: id } });
+    if (count > 0) {
+      return res.status(400).json({ error: 'Não é possível excluir o plano pois existem assinaturas vinculadas a ele.' });
+    }
+
+    const plan = await prisma.plan.delete({ where: { id } });
+
+    await prisma.auditLog.create({
+      data: {
+        action: 'PLAN_DELETED',
+        actorUserId: (req as any).user?.id,
+        metadata: JSON.stringify({ planCode: plan.code, name: plan.name })
+      }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao excluir plano' });
   }
 });
 

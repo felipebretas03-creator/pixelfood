@@ -9,12 +9,14 @@ import {
   Store, 
   Activity, 
   MessageSquare,
-  LogOut
+  LogOut,
+  Package
 } from 'lucide-react';
 
 const MASTER_NAV = [
   { label: 'Dashboard', href: '/master', icon: LayoutDashboard },
   { label: 'Lojas', href: '/master/lojas', icon: Store },
+  { label: 'Planos', href: '/master/planos', icon: Package },
   { label: 'Auditoria', href: '/master/auditoria', icon: Activity },
   { label: 'Comunicados', href: '/master/comunicados', icon: MessageSquare },
 ];
