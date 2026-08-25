@@ -9,8 +9,19 @@ dotenv.config();
 const server = http.createServer(app);
 export const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        !origin ||
+        origin.endsWith('.vercel.app') ||
+        origin.startsWith('http://localhost')
+      ) {
+        return callback(null, true);
+      }
+      return callback(new Error('Socket.IO CORS: origem não permitida'));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
   }
 });
 

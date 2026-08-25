@@ -48,17 +48,23 @@ export default async function SlugLayout({
   return (
     <>
       <head>
-        {settings?.primaryColor && (
-          <style dangerouslySetInnerHTML={{__html: `
-            :root {
-              --color-brand-50: ${settings.primaryColor}15;
-              --color-brand-100: ${settings.primaryColor}30;
-              --color-brand-200: ${settings.primaryColor}50;
-              --color-brand-500: ${settings.primaryColor};
-              --color-brand-600: ${settings.primaryColor};
-            }
-          `}} />
-        )}
+        {settings?.primaryColor && (() => {
+          // Sanitização: aceita apenas cores hex válidas (#rrggbb ou #rgb)
+          const safeColor = /^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/.test(settings.primaryColor)
+            ? settings.primaryColor
+            : '#10b981'; // Cor padrão (verde PixelFood)
+          return (
+            <style dangerouslySetInnerHTML={{__html: `
+              :root {
+                --color-brand-50: ${safeColor}15;
+                --color-brand-100: ${safeColor}30;
+                --color-brand-200: ${safeColor}50;
+                --color-brand-500: ${safeColor};
+                --color-brand-600: ${safeColor};
+              }
+            `}} />
+          );
+        })()}
       </head>
       {children}
       <Toaster />
