@@ -16,7 +16,7 @@ export default function AoVivoPage() {
         .then((data: any[]) => {
           if (!isMounted) return;
           setPedidosTotais(data.length);
-          const totalFaturamento = data.reduce((acc, order) => acc + (Number(order.total) || 0), 0) / 100;
+          const totalFaturamento = data.reduce((acc, order) => acc + (Number(order.totalCents) || 0), 0) / 100;
           
           // Sound trigger for new orders when polling
           setPedidosTotais(prev => {
@@ -61,7 +61,7 @@ export default function AoVivoPage() {
       } catch(e) {}
       
       socket.on('new_order', (dbOrder: any) => {
-        setFaturamento(prev => prev + (Number(dbOrder.total) || 0) / 100);
+        setFaturamento(prev => prev + (Number(dbOrder.totalCents) || 0) / 100);
         setPedidosTotais(prev => prev + 1);
         
         setPulse(true);
