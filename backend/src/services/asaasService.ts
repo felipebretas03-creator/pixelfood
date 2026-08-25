@@ -31,8 +31,9 @@ export const asaasService = {
       });
       return response.data; // { id: 'cus_00000', ... }
     } catch (error: any) {
+      const asaasError = error.response?.data?.errors?.[0]?.description || error.message;
       console.error('[ASAAS Error] createCustomer:', error.response?.data || error.message);
-      throw new Error('Falha ao criar cliente no Asaas');
+      throw new Error(`Falha ao criar cliente no Asaas: ${asaasError}`);
     }
   },
 
@@ -59,8 +60,9 @@ export const asaasService = {
       
       return response.data; // { id: 'sub_00000', ... }
     } catch (error: any) {
+      const asaasError = error.response?.data?.errors?.[0]?.description || error.message;
       console.error('[ASAAS Error] createSubscription:', error.response?.data || error.message);
-      throw new Error('Falha ao criar assinatura no Asaas');
+      throw new Error(`Falha ao criar assinatura no Asaas: ${asaasError}`);
     }
   },
 
