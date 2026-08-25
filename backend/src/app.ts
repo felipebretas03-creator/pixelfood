@@ -80,7 +80,7 @@ import orderRoutes from './routes/orderRoutes';
 import productRoutes from './routes/productRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import tenantRoutes from './routes/tenantRoutes';
-import masterRoutes from './routes/masterRoutes';
+import masterRoutes from './routes/master';
 import customerRoutes from './routes/customerRoutes';
 import couponRoutes from './routes/couponRoutes';
 import checkoutRoutes from './routes/checkoutRoutes';
