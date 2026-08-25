@@ -1,5 +1,29 @@
 import { Toaster } from "@/components/Toaster";
 import { BottomNavigation } from "@/components/BottomNavigation";
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
+  let title = "Delivery App";
+  try {
+    const backendBase = process.env.NEXT_PUBLIC_API_URL || '';
+    const res = await fetch(`${backendBase}/api/settings`, { 
+      cache: 'no-store',
+      headers: { 'x-restaurant-slug': resolvedParams.slug }
+    });
+    if (res.ok) {
+      const settings = await res.json();
+      if (settings?.storeName) {
+        title = settings.storeName;
+      }
+    }
+  } catch (err) {}
+  
+  return {
+    title: title,
+    description: `Faça seu pedido no ${title} com facilidade.`,
+  };
+}
 
 export default async function SlugLayout({
   children,

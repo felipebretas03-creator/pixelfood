@@ -21,8 +21,8 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Foodu - Sistema Premium de Delivery",
-  description: "Acompanhe seus pedidos, escolha seus pratos e receba em casa com a melhor experiência.",
+  title: "Sistema de Delivery",
+  description: "Faça seu pedido online com rapidez e praticidade.",
 };
 
 export default function RootLayout({
