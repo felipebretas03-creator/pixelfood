@@ -80,14 +80,14 @@ export const createPixCheckout = async (req: Request, res: Response) => {
 
 export const mercadoPagoWebhook = async (req: Request, res: Response) => {
   try {
-    const { tenantId } = req.params;
+    const tenantId = req.params.tenantId as string;
     const paymentId = req.query['data.id'] || (req.body && req.body.data && req.body.data.id);
     
     res.status(200).send('OK');
 
     if (!paymentId) return;
 
-    const settings = await prisma.settings.findUnique({ where: { tenantId } });
+    const settings = await prisma.settings.findUnique({ where: { tenantId: tenantId as string } });
     if (!settings || !settings.mpAccessToken) return;
 
     const client = new MercadoPagoConfig({ accessToken: settings.mpAccessToken });
@@ -104,7 +104,7 @@ export const mercadoPagoWebhook = async (req: Request, res: Response) => {
              data: { status: 'PENDING' }, // Now it goes to the kitchen!
              include: { items: true, customer: true }
            });
-           io.to(tenantId).emit('new_order', updatedOrder);
+           io.to(tenantId as string).emit('new_order', updatedOrder);
         }
       }
     }
