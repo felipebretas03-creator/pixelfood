@@ -448,8 +448,8 @@ export default function ConfiguracoesPage() {
             }).map(([key, label]) => {
               const config = businessHours[key];
               return (
-                <div key={key} className="flex flex-col md:flex-row md:items-center justify-between bg-white p-5 rounded-2xl border border-stone-200 gap-4 shadow-sm hover:border-brand-200 transition-colors">
-                  <div className="flex items-center gap-4 w-40 shrink-0">
+                <div key={key} className="flex flex-col xl:flex-row xl:items-center justify-between bg-white p-4 sm:p-5 rounded-2xl border border-stone-200 gap-4 shadow-sm hover:border-brand-200 transition-colors">
+                  <div className="flex items-center gap-4 min-w-[150px] shrink-0">
                     <label className="relative inline-flex items-center cursor-pointer shrink-0">
                       <input 
                         type="checkbox" 
@@ -463,8 +463,8 @@ export default function ConfiguracoesPage() {
                   </div>
 
                   {config.isOpen && (
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 w-full md:w-auto md:justify-end">
-                      <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-stone-700 bg-stone-100 px-3 py-2 rounded-xl hover:bg-stone-200 transition-colors shrink-0 w-fit">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-5 w-full xl:w-auto xl:justify-end">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-stone-700 bg-stone-100 px-3 py-2 rounded-xl hover:bg-stone-200 transition-colors shrink-0">
                         <input 
                           type="checkbox"
                           checked={config.is24Hours}
@@ -475,19 +475,19 @@ export default function ConfiguracoesPage() {
                       </label>
 
                       {!config.is24Hours && (
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                           <input 
                             type="time" 
                             value={config.open}
                             onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, open: e.target.value } })}
-                            className="bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-28 text-center"
+                            className="bg-white border border-stone-200 rounded-xl px-2 sm:px-4 py-2 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-[100px] sm:w-[110px] text-center"
                           />
                           <span className="text-stone-400 text-sm font-bold">até</span>
                           <input 
                             type="time" 
                             value={config.close}
                             onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, close: e.target.value } })}
-                            className="bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-28 text-center"
+                            className="bg-white border border-stone-200 rounded-xl px-2 sm:px-4 py-2 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-[100px] sm:w-[110px] text-center"
                           />
                         </div>
                       )}
