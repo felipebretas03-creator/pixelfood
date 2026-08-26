@@ -448,23 +448,27 @@ export default function ConfiguracoesPage() {
             }).map(([key, label]) => {
               const config = businessHours[key];
               return (
-                <div key={key} className="flex flex-col xl:flex-row xl:items-center justify-between bg-white p-4 sm:p-5 rounded-2xl border border-stone-200 gap-4 shadow-sm hover:border-brand-200 transition-colors">
-                  <div className="flex items-center gap-4 min-w-[150px] shrink-0">
-                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                      <input 
-                        type="checkbox" 
-                        className="sr-only peer"
-                        checked={config.isOpen}
-                        onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, isOpen: e.target.checked } })}
-                      />
-                      <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                    </label>
-                    <span className={`font-bold text-[15px] whitespace-nowrap ${config.isOpen ? 'text-stone-900' : 'text-stone-400'}`}>{label}</span>
+                <div key={key} className="flex flex-col bg-white p-4 sm:p-5 rounded-2xl border border-stone-200 shadow-sm hover:border-brand-200 transition-colors gap-3">
+                  {/* Topo: Nome do dia e Switch */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer"
+                          checked={config.isOpen}
+                          onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, isOpen: e.target.checked } })}
+                        />
+                        <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                      </label>
+                      <span className={`font-bold text-[15px] ${config.isOpen ? 'text-stone-900' : 'text-stone-400'}`}>{label}</span>
+                    </div>
                   </div>
 
+                  {/* Base: Configurações de tempo (só se estiver aberto) */}
                   {config.isOpen && (
-                    <div className="flex flex-wrap items-center gap-3 sm:gap-5 w-full xl:w-auto xl:justify-end">
-                      <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-stone-700 bg-stone-100 px-3 py-2 rounded-xl hover:bg-stone-200 transition-colors shrink-0">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 pt-3 mt-1">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-stone-700 bg-stone-50 px-3 py-2 rounded-xl hover:bg-stone-100 transition-colors shrink-0 border border-stone-100">
                         <input 
                           type="checkbox"
                           checked={config.is24Hours}
@@ -475,19 +479,19 @@ export default function ConfiguracoesPage() {
                       </label>
 
                       {!config.is24Hours && (
-                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0">
                           <input 
                             type="time" 
                             value={config.open}
                             onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, open: e.target.value } })}
-                            className="bg-white border border-stone-200 rounded-xl px-2 sm:px-4 py-2 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-[100px] sm:w-[110px] text-center"
+                            className="bg-white border border-stone-200 rounded-xl px-2 sm:px-3 py-2 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-[90px] sm:w-[100px] text-center"
                           />
-                          <span className="text-stone-400 text-sm font-bold">até</span>
+                          <span className="text-stone-400 text-xs font-bold uppercase tracking-wider">até</span>
                           <input 
                             type="time" 
                             value={config.close}
                             onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, close: e.target.value } })}
-                            className="bg-white border border-stone-200 rounded-xl px-2 sm:px-4 py-2 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-[100px] sm:w-[110px] text-center"
+                            className="bg-white border border-stone-200 rounded-xl px-2 sm:px-3 py-2 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-[90px] sm:w-[100px] text-center"
                           />
                         </div>
                       )}
