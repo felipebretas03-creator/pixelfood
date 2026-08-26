@@ -448,9 +448,9 @@ export default function ConfiguracoesPage() {
             }).map(([key, label]) => {
               const config = businessHours[key];
               return (
-                <div key={key} className="flex flex-col sm:flex-row sm:items-center justify-between bg-stone-50 p-4 rounded-2xl border border-stone-200 gap-4">
-                  <div className="flex items-center gap-4">
-                    <label className="relative inline-flex items-center cursor-pointer">
+                <div key={key} className="flex flex-col md:flex-row md:items-center justify-between bg-white p-5 rounded-2xl border border-stone-200 gap-4 shadow-sm hover:border-brand-200 transition-colors">
+                  <div className="flex items-center gap-4 w-40 shrink-0">
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
                       <input 
                         type="checkbox" 
                         className="sr-only peer"
@@ -459,12 +459,12 @@ export default function ConfiguracoesPage() {
                       />
                       <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                     </label>
-                    <span className={`font-bold ${config.isOpen ? 'text-stone-900' : 'text-stone-400'}`}>{label}</span>
+                    <span className={`font-bold text-[15px] whitespace-nowrap ${config.isOpen ? 'text-stone-900' : 'text-stone-400'}`}>{label}</span>
                   </div>
 
                   {config.isOpen && (
-                    <div className="flex items-center gap-4 flex-wrap">
-                      <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-stone-700">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 w-full md:w-auto md:justify-end">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-stone-700 bg-stone-100 px-3 py-2 rounded-xl hover:bg-stone-200 transition-colors shrink-0 w-fit">
                         <input 
                           type="checkbox"
                           checked={config.is24Hours}
@@ -475,19 +475,19 @@ export default function ConfiguracoesPage() {
                       </label>
 
                       {!config.is24Hours && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                           <input 
                             type="time" 
                             value={config.open}
                             onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, open: e.target.value } })}
-                            className="bg-white border border-stone-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-500"
+                            className="bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-28 text-center"
                           />
-                          <span className="text-stone-500 text-sm">até</span>
+                          <span className="text-stone-400 text-sm font-bold">até</span>
                           <input 
                             type="time" 
                             value={config.close}
                             onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, close: e.target.value } })}
-                            className="bg-white border border-stone-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-500"
+                            className="bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-28 text-center"
                           />
                         </div>
                       )}
