@@ -166,10 +166,20 @@ router.get('/tenants/:id/activity', async (req, res) => {
 // 4. SUSPENDER LOJA
 router.post('/tenants/:id/suspend', async (req, res) => {
   try {
+    const tenantId = req.params.id;
     const tenant = await prisma.tenant.update({
-      where: { id: req.params.id },
+      where: { id: tenantId },
       data: { subscriptionStatus: 'SUSPENDED', operationalStatus: 'CLOSED' }
     });
+
+    const existingSub = await prisma.subscription.findFirst({ where: { tenantId } });
+    if (existingSub) {
+      if (existingSub.providerSubscriptionId && !existingSub.providerSubscriptionId.startsWith('sub_simulated')) {
+        await asaasService.cancelSubscription(existingSub.providerSubscriptionId).catch(console.error);
+      }
+      await prisma.subscription.update({ where: { id: existingSub.id }, data: { status: 'CANCELED' }});
+    }
+
     const user = (req as any).user;
     await logAudit('STORE_SUSPENDED', user.id, tenant.id, { reason: req.body.reason });
     res.json(tenant);
@@ -181,10 +191,20 @@ router.post('/tenants/:id/suspend', async (req, res) => {
 // 4.5 CANCELAR ASSINATURA LOJA
 router.post('/tenants/:id/cancel', async (req, res) => {
   try {
+    const tenantId = req.params.id;
     const tenant = await prisma.tenant.update({
-      where: { id: req.params.id },
+      where: { id: tenantId },
       data: { subscriptionStatus: 'CANCELED' }
     });
+
+    const existingSub = await prisma.subscription.findFirst({ where: { tenantId } });
+    if (existingSub) {
+      if (existingSub.providerSubscriptionId && !existingSub.providerSubscriptionId.startsWith('sub_simulated')) {
+        await asaasService.cancelSubscription(existingSub.providerSubscriptionId).catch(console.error);
+      }
+      await prisma.subscription.update({ where: { id: existingSub.id }, data: { status: 'CANCELED' }});
+    }
+
     const user = (req as any).user;
     await logAudit('STORE_CANCELED', user.id, tenant.id, { reason: req.body.reason });
     res.json(tenant);
@@ -421,6 +441,15 @@ router.post('/tenants/:id/lifetime', async (req, res) => {
         lifetimeExpiresAt
       }
     });
+
+    // Cancela assinaturas vigentes no Asaas para não cobrar mais o cliente
+    const existingSub = await prisma.subscription.findFirst({ where: { tenantId } });
+    if (existingSub) {
+      if (existingSub.providerSubscriptionId && !existingSub.providerSubscriptionId.startsWith('sub_simulated')) {
+        await asaasService.cancelSubscription(existingSub.providerSubscriptionId).catch(console.error);
+      }
+      await prisma.subscription.deleteMany({ where: { tenantId } });
+    }
     
     const user = (req as any).user;
     await logAudit('PLAN_CHANGED', user.id, tenantId, { 
