@@ -11,9 +11,17 @@ export const getSettings = async (req: Request, res: Response) => {
     settings = await prisma.settings.create({ data: { tenantId: req.tenantId! } });
   }
   
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: req.tenantId! },
+    select: { subscriptionStatus: true }
+  });
+  const isBlocked = tenant?.subscriptionStatus === 'PAST_DUE' || tenant?.subscriptionStatus === 'SUSPENDED' || tenant?.subscriptionStatus === 'CANCELED';
+
   const { encryptPaymentCredential, maskPaymentCredential } = require('../services/cryptoService');
   const maskedSettings = {
     ...settings,
+    isOpen: isBlocked ? false : settings.isOpen,
+    subscriptionStatus: tenant?.subscriptionStatus,
     mpAccessToken: settings.mpAccessToken ? maskPaymentCredential(settings.mpAccessToken) : '',
     mpPublicKey: settings.mpPublicKey || '',
   };
@@ -26,7 +34,8 @@ export const updateSettings = async (req: Request, res: Response) => {
     const { 
       storeName, primaryColor, deliveryType, deliveryFee, isOpen, 
       mpAccessToken, mpPublicKey, 
-      acceptPix, acceptCreditCardOnline, acceptCardMachine, acceptCash 
+      acceptPix, acceptCreditCardOnline, acceptCardMachine, acceptCash,
+      businessHours
     } = req.body;
     
     let settings = await prisma.settings.findUnique({
@@ -51,6 +60,7 @@ export const updateSettings = async (req: Request, res: Response) => {
         acceptCreditCardOnline: acceptCreditCardOnline !== undefined ? acceptCreditCardOnline : settings.acceptCreditCardOnline,
         acceptCardMachine: acceptCardMachine !== undefined ? acceptCardMachine : settings.acceptCardMachine,
         acceptCash: acceptCash !== undefined ? acceptCash : settings.acceptCash,
+        businessHours: businessHours !== undefined ? businessHours : settings.businessHours,
       }
     });
 
@@ -330,5 +340,106 @@ export const updateLoyalty = async (req: Request, res: Response) => {
 };
 
 // ==========================================
-// CAKTO WEBHOOK - Aprovação de Pagamentos
-// ==========================================
+export const getPlans = async (req: Request, res: Response) => {
+  try {
+    const plans = await prisma.plan.findMany({ where: { isActive: true }, orderBy: { priceCents: 'asc' } });
+    res.json(plans);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar planos' });
+  }
+};
+
+export const getSubscriptionCheckout = async (req: Request, res: Response) => {
+  try {
+    const planId = req.query.planId as string;
+    const tenant = await prisma.tenant.findUnique({ 
+      where: { id: req.tenantId! },
+      include: { subscriptions: true }
+    });
+    
+    if (!tenant) return res.status(404).json({ error: 'Tenant não encontrado' });
+    
+    const axios = require('axios');
+    const asaasClient = axios.create({
+      baseURL: process.env.ASAAS_API_URL || 'https://sandbox.asaas.com/api/v3',
+      headers: { 'access_token': process.env.ASAAS_API_KEY, 'Content-Type': 'application/json' }
+    });
+    
+    // Se o lojista já tem uma assinatura no Asaas e não está trocando de plano, tenta pegar a fatura atual
+    let currentSub = tenant.subscriptions[0];
+    if (currentSub?.providerSubscriptionId && (!planId || currentSub.planId === planId)) {
+      try {
+        const payments = await asaasClient.get(`/payments?subscription=${currentSub.providerSubscriptionId}`);
+        const pendingPayment = payments.data.data.find((p: any) => p.status === 'PENDING' || p.status === 'OVERDUE');
+        if (pendingPayment) {
+          return res.json({ checkoutUrl: pendingPayment.invoiceUrl });
+        }
+      } catch (e) {
+        console.error('Erro ao buscar pagamentos no Asaas', e);
+      }
+    }
+    
+    // Se não encontrou fatura pendente, ou está trocando de plano, temos que criar uma nova assinatura.
+    // Primeiro precisamos do customer (cliente no Asaas).
+    let customerId = currentSub?.providerCustomerId;
+    if (!customerId) {
+      try {
+        const custRes = await asaasClient.post('/customers', {
+          name: tenant.name,
+          email: tenant.email,
+          notificationDisabled: true
+        });
+        customerId = custRes.data.id;
+      } catch (e) {
+         console.warn('Erro ao criar customer no asaas (pode já existir)', e);
+      }
+    }
+    
+    const plan = await prisma.plan.findUnique({ where: { id: planId || (currentSub ? currentSub.planId : '') } });
+    if (!plan || !customerId) {
+      return res.status(400).json({ error: 'Plano não encontrado ou erro ao identificar cliente no Asaas.' });
+    }
+    
+    // Cria nova assinatura no Asaas
+    const today = new Date();
+    today.setDate(today.getDate() + 1);
+    
+    const subRes = await asaasClient.post('/subscriptions', {
+      customer: customerId,
+      billingType: 'UNDEFINED',
+      value: plan.priceCents / 100,
+      nextDueDate: today.toISOString().split('T')[0],
+      cycle: plan.billingCycle === 'YEARLY' ? 'YEARLY' : 'MONTHLY',
+      description: `Assinatura PixelFood - ${plan.name}`
+    });
+    
+    // Busca a cobrança recém criada
+    const chargeRes = await asaasClient.get(`/payments?subscription=${subRes.data.id}`);
+    const invoiceUrl = chargeRes.data.data[0]?.invoiceUrl || subRes.data.invoiceUrl;
+    
+    // Atualiza o banco com a nova assinatura
+    if (currentSub) {
+      await prisma.subscription.update({
+        where: { id: currentSub.id },
+        data: { planId: plan.id, providerSubscriptionId: subRes.data.id, providerCustomerId: customerId }
+      });
+    } else {
+      await prisma.subscription.create({
+        data: {
+          tenantId: tenant.id,
+          planId: plan.id,
+          provider: 'ASAAS',
+          providerSubscriptionId: subRes.data.id,
+          providerCustomerId: customerId,
+          status: 'PENDING'
+        }
+      });
+    }
+    
+    return res.json({ checkoutUrl: invoiceUrl });
+
+  } catch (error: any) {
+    console.error('Erro getSubscriptionCheckout:', error.response?.data || error);
+    res.status(500).json({ error: 'Erro ao gerar checkout' });
+  }
+};

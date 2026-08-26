@@ -1,5 +1,5 @@
 "use client";
-import { Save, Upload, Palette, Bike, Store, Check, Power, Loader2, Trash, Plus, LogOut, Camera, CreditCard, Info, ExternalLink } from 'lucide-react';
+import { Save, Upload, Palette, Bike, Store, Check, Power, Loader2, Trash, Plus, LogOut, Camera, CreditCard, Info, ExternalLink, Clock } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
@@ -26,6 +26,16 @@ export default function ConfiguracoesPage() {
   const [newCity, setNewCity] = useState('');
   const [newNeighborhood, setNewNeighborhood] = useState('');
   const [newFee, setNewFee] = useState('');
+  
+  const [businessHours, setBusinessHours] = useState<any>({
+    sunday: { isOpen: false, is24Hours: false, open: "18:00", close: "23:00" },
+    monday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+    tuesday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+    wednesday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+    thursday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+    friday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+    saturday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+  });
   
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -62,6 +72,9 @@ export default function ConfiguracoesPage() {
           if (data.acceptCreditCardOnline !== undefined) setAcceptCreditCardOnline(data.acceptCreditCardOnline);
           if (data.acceptCardMachine !== undefined) setAcceptCardMachine(data.acceptCardMachine);
           if (data.acceptCash !== undefined) setAcceptCash(data.acceptCash);
+          if (data.businessHours) {
+            setBusinessHours((prev: any) => ({ ...prev, ...data.businessHours }));
+          }
         }
       })
       .catch(console.error);
@@ -97,7 +110,8 @@ export default function ConfiguracoesPage() {
           acceptPix,
           acceptCreditCardOnline,
           acceptCardMachine,
-          acceptCash
+          acceptCash,
+          businessHours
         })
       });
       setIsSaved(true);
@@ -410,6 +424,79 @@ export default function ConfiguracoesPage() {
                 </button>
               </div>
             </div>
+        </div>
+
+        {/* Horários de Funcionamento */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex flex-col gap-6">
+          <div className="flex items-center gap-3 border-b border-stone-100 pb-4">
+            <div className="w-10 h-10 bg-stone-100 text-stone-500 rounded-xl flex items-center justify-center">
+              <Clock className="w-5 h-5" />
+            </div>
+            <h2 className="font-bold text-lg text-stone-900">Horários de Funcionamento</h2>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-stone-500 mb-2">Configure os dias e horários em que seu restaurante atende.</p>
+            {Object.entries({
+              sunday: "Domingo",
+              monday: "Segunda-feira",
+              tuesday: "Terça-feira",
+              wednesday: "Quarta-feira",
+              thursday: "Quinta-feira",
+              friday: "Sexta-feira",
+              saturday: "Sábado"
+            }).map(([key, label]) => {
+              const config = businessHours[key];
+              return (
+                <div key={key} className="flex flex-col sm:flex-row sm:items-center justify-between bg-stone-50 p-4 rounded-2xl border border-stone-200 gap-4">
+                  <div className="flex items-center gap-4">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer"
+                        checked={config.isOpen}
+                        onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, isOpen: e.target.checked } })}
+                      />
+                      <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                    <span className={`font-bold ${config.isOpen ? 'text-stone-900' : 'text-stone-400'}`}>{label}</span>
+                  </div>
+
+                  {config.isOpen && (
+                    <div className="flex items-center gap-4 flex-wrap">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-stone-700">
+                        <input 
+                          type="checkbox"
+                          checked={config.is24Hours}
+                          onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, is24Hours: e.target.checked } })}
+                          className="w-4 h-4 rounded text-brand-500 border-stone-300 focus:ring-brand-500"
+                        />
+                        24 Horas
+                      </label>
+
+                      {!config.is24Hours && (
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="time" 
+                            value={config.open}
+                            onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, open: e.target.value } })}
+                            className="bg-white border border-stone-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-500"
+                          />
+                          <span className="text-stone-500 text-sm">até</span>
+                          <input 
+                            type="time" 
+                            value={config.close}
+                            onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, close: e.target.value } })}
+                            className="bg-white border border-stone-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-500"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Frete e Entrega */}

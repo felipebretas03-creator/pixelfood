@@ -292,6 +292,8 @@ model Settings {
   acceptCardMachine      Boolean @default(true)
   acceptCash             Boolean @default(true)
 
+  businessHours          Json?
+
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 }
 

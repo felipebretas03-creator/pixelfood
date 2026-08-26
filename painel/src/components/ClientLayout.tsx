@@ -22,6 +22,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const [isStoreOpen, setIsStoreOpen] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const { isAuthenticated, logout, tenant } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -63,8 +64,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       apiFetch('/api/settings')
         .then(res => res.json())
         .then(data => {
-          if (data && typeof data.isOpen === 'boolean') {
-            setIsStoreOpen(data.isOpen);
+          if (data) {
+            if (typeof data.isOpen === 'boolean') setIsStoreOpen(data.isOpen);
+            if (data.subscriptionStatus) setSubscriptionStatus(data.subscriptionStatus);
           }
         })
         .catch(console.error);
@@ -257,6 +259,26 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <main className={(pathname === "/aovivo" || pathname === "/login" || pathname === "/cadastro") ? "flex-1 w-full" : "flex-1 max-w-[1400px] w-full mx-auto px-6 py-8 pb-24 md:pb-8"}>
         {children}
       </main>
+
+      {/* Modal de Bloqueio por Inadimplência */}
+      {(subscriptionStatus === 'PAST_DUE' || subscriptionStatus === 'SUSPENDED' || subscriptionStatus === 'CANCELED') && 
+        pathname !== '/assinatura' && pathname !== '/login' && pathname !== '/cadastro' && !pathname?.startsWith('/master') && (
+        <div style={{ zIndex: 99999 }} className="fixed inset-0 flex items-center justify-center bg-stone-900/60 backdrop-blur-md">
+           <div className="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl flex flex-col items-center text-center mx-4 relative z-10">
+              <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
+              <h2 className="text-2xl font-black text-stone-900 mb-2">Acesso Bloqueado</h2>
+              <p className="text-stone-500 mb-6 font-medium">Seu restaurante encontra-se temporariamente bloqueado devido a pendências na assinatura.</p>
+              
+              <Link href="/assinatura" className="w-full py-4 bg-brand-500 text-white font-bold rounded-xl shadow-lg hover:bg-brand-600 transition-colors mb-3">
+                 Fazer Pagamento
+              </Link>
+              
+              <a href="https://wa.me/5521959188732" target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-stone-100 text-stone-700 font-bold rounded-xl hover:bg-stone-200 transition-colors">
+                 Falar com Suporte
+              </a>
+           </div>
+        </div>
+      )}
     </>
   );
 }

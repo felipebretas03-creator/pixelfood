@@ -40,4 +40,9 @@ router.get('/dashboard/fechamento', ownerMiddleware, getDashboardFechamento);
 router.get('/loyalty', getLoyalty);
 router.put('/loyalty', ownerMiddleware, updateLoyalty);
 
+// --- Assinaturas ---
+import { getPlans, getSubscriptionCheckout } from '../controllers/tenantController';
+router.get('/plans', getPlans);
+router.get('/subscription/checkout', ownerMiddleware, getSubscriptionCheckout);
+
 export default router;
