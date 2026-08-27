@@ -1,4 +1,4 @@
-export const checkStoreIsOpen = (settings: any, isBlocked: boolean = false): boolean => {
+const checkStoreIsOpen = (settings, isBlocked = false) => {
   if (isBlocked) return false;
   if (!settings.businessHours) return settings.isOpen;
 
@@ -13,7 +13,7 @@ export const checkStoreIsOpen = (settings: any, isBlocked: boolean = false): boo
 
     let autoIsOpen = false;
 
-    const checkDay = (config: any, timeToCheck: number, isYesterday: boolean): boolean => {
+    const checkDay = (config, timeToCheck, isYesterday) => {
       if (!config || !config.isOpen) return false;
       if (config.is24Hours) return true;
       if (!config.open || !config.close) return false;
@@ -48,30 +48,23 @@ export const checkStoreIsOpen = (settings: any, isBlocked: boolean = false): boo
       
       let lastTransitionTime = 0;
 
-      const getRealEpochInSP = (dayOffset: number, timeStr: string) => {
-        const spDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
-        const [year, month, day] = spDateStr.split('-').map(Number);
-        const d = new Date(Date.UTC(year, month - 1, day + dayOffset));
-        const newY = d.getUTCFullYear();
-        const newM = String(d.getUTCMonth() + 1).padStart(2, '0');
-        const newD = String(d.getUTCDate()).padStart(2, '0');
-        // Usa UTC-3 para SP
-        const isoStr = `${newY}-${newM}-${newD}T${timeStr}:00.000-03:00`;
-        return new Date(isoStr).getTime();
+      const createDateForDay = (offsetDays, hours, mins) => {
+        const d = new Date(spNow);
+        d.setDate(d.getDate() + offsetDays);
+        d.setHours(hours, mins, 0, 0);
+        return d.getTime();
       };
-
-      const nowEpoch = new Date().getTime();
 
       if (yesterdayConfig && yesterdayConfig.isOpen && !yesterdayConfig.is24Hours && yesterdayConfig.open && yesterdayConfig.close) {
         const [oH, oM] = yesterdayConfig.open.split(':').map(Number);
         const [cH, cM] = yesterdayConfig.close.split(':').map(Number);
         const crosses = (cH * 60 + cM) <= (oH * 60 + oM);
         
-        const openTime = getRealEpochInSP(-1, yesterdayConfig.open);
-        const closeTime = getRealEpochInSP(crosses ? 0 : -1, yesterdayConfig.close);
+        const openTime = createDateForDay(-1, oH, oM);
+        const closeTime = createDateForDay(crosses ? 0 : -1, cH, cM);
         
-        if (openTime <= nowEpoch && openTime > lastTransitionTime) lastTransitionTime = openTime;
-        if (closeTime <= nowEpoch && closeTime > lastTransitionTime) lastTransitionTime = closeTime;
+        if (openTime <= spNow.getTime() && openTime > lastTransitionTime) lastTransitionTime = openTime;
+        if (closeTime <= spNow.getTime() && closeTime > lastTransitionTime) lastTransitionTime = closeTime;
       }
       
       if (todayConfig && todayConfig.isOpen && !todayConfig.is24Hours && todayConfig.open && todayConfig.close) {
@@ -79,22 +72,44 @@ export const checkStoreIsOpen = (settings: any, isBlocked: boolean = false): boo
         const [cH, cM] = todayConfig.close.split(':').map(Number);
         const crosses = (cH * 60 + cM) <= (oH * 60 + oM);
         
-        const openTime = getRealEpochInSP(0, todayConfig.open);
-        const closeTime = getRealEpochInSP(crosses ? 1 : 0, todayConfig.close);
+        const openTime = createDateForDay(0, oH, oM);
+        const closeTime = createDateForDay(crosses ? 1 : 0, cH, cM);
         
-        if (openTime <= nowEpoch && openTime > lastTransitionTime) lastTransitionTime = openTime;
-        if (closeTime <= nowEpoch && closeTime > lastTransitionTime) lastTransitionTime = closeTime;
+        if (openTime <= spNow.getTime() && openTime > lastTransitionTime) lastTransitionTime = openTime;
+        if (closeTime <= spNow.getTime() && closeTime > lastTransitionTime) lastTransitionTime = closeTime;
       }
 
+      console.log("Override time:", new Date(overrideTime));
+      console.log("Last transition:", new Date(lastTransitionTime));
+      
       // Se o override foi feito APÓS a última transição de horário programada
       if (overrideTime > lastTransitionTime) {
+        console.log("Override mandates:", overrideStatus);
         return overrideStatus;
+      } else {
+         console.log("Override is stale.");
       }
     }
 
+    console.log("Auto says:", autoIsOpen);
     return autoIsOpen;
   } catch (err) {
     console.error("Erro ao calcular checkStoreIsOpen:", err);
     return settings.isOpen;
   }
 };
+
+const settings = {
+  isOpen: true,
+  businessHours: {
+    sunday: { isOpen: false, is24Hours: false, open: "18:00", close: "23:00" },
+    monday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+    tuesday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+    wednesday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+    thursday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+    friday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+    saturday: { isOpen: true, is24Hours: false, open: "18:00", close: "23:00" },
+  }
+};
+
+console.log("Is open?", checkStoreIsOpen(settings, false));
