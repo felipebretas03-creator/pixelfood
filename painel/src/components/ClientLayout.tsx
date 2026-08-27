@@ -65,7 +65,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         .then(res => res.json())
         .then(data => {
           if (data) {
-            if (typeof data.isOpen === 'boolean') setIsStoreOpen(data.isOpen);
+            if (typeof data.isCurrentlyOpen === 'boolean') setIsStoreOpen(data.isCurrentlyOpen);
             if (data.subscriptionStatus) setSubscriptionStatus(data.subscriptionStatus);
           }
         })

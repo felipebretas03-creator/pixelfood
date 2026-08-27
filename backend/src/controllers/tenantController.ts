@@ -65,9 +65,23 @@ export const updateSettings = async (req: Request, res: Response) => {
         acceptCreditCardOnline: acceptCreditCardOnline !== undefined ? acceptCreditCardOnline : settings.acceptCreditCardOnline,
         acceptCardMachine: acceptCardMachine !== undefined ? acceptCardMachine : settings.acceptCardMachine,
         acceptCash: acceptCash !== undefined ? acceptCash : settings.acceptCash,
-        businessHours: businessHours !== undefined ? businessHours : settings.businessHours,
       }
     });
+
+    let newBusinessHours = businessHours !== undefined ? businessHours : (settings.businessHours || {});
+    if (typeof newBusinessHours === 'object' && newBusinessHours !== null) {
+      if (isOpen !== undefined && isOpen !== settings.isOpen) {
+         newBusinessHours.manualOverride = {
+           status: isOpen ? 'OPEN' : 'CLOSED',
+           timestamp: new Date().getTime()
+         };
+      }
+      
+      await prisma.settings.update({
+        where: { tenantId: req.tenantId! },
+        data: { businessHours: newBusinessHours }
+      });
+    }
 
     if (mpAccessToken && !mpAccessToken.includes('••••') && mpPublicKey && !mpPublicKey.includes('••••')) {
       const { encryptPaymentCredential } = require('../services/cryptoService');
