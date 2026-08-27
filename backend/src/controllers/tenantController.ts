@@ -40,7 +40,7 @@ export const updateSettings = async (req: Request, res: Response) => {
       storeName, primaryColor, deliveryType, deliveryFee, isOpen, 
       mpAccessToken, mpPublicKey, 
       acceptPix, acceptCreditCardOnline, acceptCardMachine, acceptCash,
-      businessHours
+      businessHours, manualOverrideStatus
     } = req.body;
     
     let settings = await prisma.settings.findUnique({
@@ -49,6 +49,21 @@ export const updateSettings = async (req: Request, res: Response) => {
     
     if (!settings) {
       settings = await prisma.settings.create({ data: { tenantId: req.tenantId! } });
+    }
+
+    let newBusinessHours = businessHours !== undefined ? businessHours : (settings.businessHours || {});
+    if (typeof newBusinessHours === 'object' && newBusinessHours !== null) {
+      if (manualOverrideStatus !== undefined) {
+         newBusinessHours.manualOverride = {
+           status: manualOverrideStatus ? 'OPEN' : 'CLOSED',
+           timestamp: new Date().getTime()
+         };
+      }
+      
+      await prisma.settings.update({
+        where: { tenantId: req.tenantId! },
+        data: { businessHours: newBusinessHours }
+      });
     }
 
     const updated = await prisma.settings.update({
@@ -68,22 +83,7 @@ export const updateSettings = async (req: Request, res: Response) => {
       }
     });
 
-    let newBusinessHours = businessHours !== undefined ? businessHours : (settings.businessHours || {});
-    if (typeof newBusinessHours === 'object' && newBusinessHours !== null) {
-      if (isOpen !== undefined && isOpen !== settings.isOpen) {
-         newBusinessHours.manualOverride = {
-           status: isOpen ? 'OPEN' : 'CLOSED',
-           timestamp: new Date().getTime()
-         };
-      }
-      
-      await prisma.settings.update({
-        where: { tenantId: req.tenantId! },
-        data: { businessHours: newBusinessHours }
-      });
-    }
-
-    if (mpAccessToken && !mpAccessToken.includes('••••') && mpPublicKey && !mpPublicKey.includes('••••')) {
+    if (mpAccessToken && !mpAccessToken.includes('••••') && mpPublicKey && !mpAccessToken.includes('••••')) {
       const { encryptPaymentCredential } = require('../services/cryptoService');
       const encryptedAccess = encryptPaymentCredential(mpAccessToken);
       

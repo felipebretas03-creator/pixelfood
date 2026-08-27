@@ -79,7 +79,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     try {
       await apiFetch('/api/settings', {
         method: 'PUT',
-        body: JSON.stringify({ isOpen: newState })
+        body: JSON.stringify({ manualOverrideStatus: newState, isOpen: newState })
       });
     } catch (error) {
       console.error("Erro ao alterar status da loja", error);
