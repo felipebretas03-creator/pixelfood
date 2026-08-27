@@ -14,6 +14,11 @@ export const createPixCheckout = async (req: Request, res: Response) => {
     if (!settings || !settings.mpAccessToken) {
       return res.status(400).json({ error: 'Restaurante não configurou o Mercado Pago.' });
     }
+    
+    const { checkStoreIsOpen } = require('../utils/storeStatus');
+    if (!checkStoreIsOpen(settings)) {
+      return res.status(400).json({ error: 'A loja está fechada no momento. Não é possível fazer pedidos.' });
+    }
 
     // Validação Segura do Carrinho
     const { subtotalCents, totalCents, snapshotItems } = await calculateOrderTotal(
@@ -122,6 +127,11 @@ export const createCardCheckout = async (req: Request, res: Response) => {
     const settings = await prisma.settings.findUnique({ where: { tenantId: req.tenantId! } });
     if (!settings || !settings.mpAccessToken) {
       return res.status(400).json({ error: 'Restaurante não configurou o Mercado Pago.' });
+    }
+
+    const { checkStoreIsOpen } = require('../utils/storeStatus');
+    if (!checkStoreIsOpen(settings)) {
+      return res.status(400).json({ error: 'A loja está fechada no momento. Não é possível fazer pedidos.' });
     }
 
     const { subtotalCents, totalCents, snapshotItems } = await calculateOrderTotal(

@@ -48,11 +48,19 @@ export const getOrderById = async (req: Request, res: Response) => {
   res.json(order);
 };
 
+import { checkStoreIsOpen } from '../utils/storeStatus';
+
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const { items, customerPhone, couponCode, discountAmount, paymentMethod, customerName, total, needsChange, changeAmount, addressStreet, addressNumber, addressCity, observation } = req.body;
-    const orderNumber = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
     const restId = req.tenantId!;
+    
+    const settings = await prisma.settings.findUnique({ where: { tenantId: restId } });
+    if (!settings || !checkStoreIsOpen(settings)) {
+      return res.status(400).json({ error: 'A loja está fechada no momento. Não é possível fazer pedidos.' });
+    }
+
+    const orderNumber = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
     
     const { subtotalCents, totalCents, snapshotItems } = await calculateOrderTotal(
       restId, items, Math.round((discountAmount || 0) * 100), 0, couponCode
