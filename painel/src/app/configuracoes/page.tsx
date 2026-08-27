@@ -468,7 +468,7 @@ export default function ConfiguracoesPage() {
                   </div>
 
                   {config.isOpen && (
-                    <div className="flex items-center justify-between pl-11">
+                    <div className="flex items-center justify-between pl-6">
                       <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-stone-600 hover:text-stone-900 transition-colors">
                         <input 
                           type="checkbox"
@@ -485,14 +485,14 @@ export default function ConfiguracoesPage() {
                             type="time" 
                             value={config.open}
                             onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, open: e.target.value } })}
-                            className="bg-stone-50 border border-stone-200 rounded-lg px-2 py-1 text-xs font-bold text-stone-700 outline-none focus:border-brand-500 focus:bg-white transition-all w-[70px] text-center"
+                            className="bg-stone-50 border border-stone-200 rounded-lg px-2 py-1 text-xs font-bold text-stone-700 outline-none focus:border-brand-500 focus:bg-white transition-all w-[90px] text-center"
                           />
                           <span className="text-stone-400 text-[10px] font-bold uppercase tracking-wider">até</span>
                           <input 
                             type="time" 
                             value={config.close}
                             onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, close: e.target.value } })}
-                            className="bg-stone-50 border border-stone-200 rounded-lg px-2 py-1 text-xs font-bold text-stone-700 outline-none focus:border-brand-500 focus:bg-white transition-all w-[70px] text-center"
+                            className="bg-stone-50 border border-stone-200 rounded-lg px-2 py-1 text-xs font-bold text-stone-700 outline-none focus:border-brand-500 focus:bg-white transition-all w-[90px] text-center"
                           />
                         </div>
                       )}
