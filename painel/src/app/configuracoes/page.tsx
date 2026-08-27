@@ -435,7 +435,7 @@ export default function ConfiguracoesPage() {
             <h2 className="font-bold text-lg text-stone-900">Horários de Funcionamento</h2>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <p className="text-sm text-stone-500 mb-2">Configure os dias e horários em que seu restaurante atende.</p>
             {Object.entries({
               sunday: "Domingo",
@@ -448,10 +448,9 @@ export default function ConfiguracoesPage() {
             }).map(([key, label]) => {
               const config = businessHours[key];
               return (
-                <div key={key} className="flex flex-col bg-white p-4 sm:p-5 rounded-2xl border border-stone-200 shadow-sm hover:border-brand-200 transition-colors gap-3">
-                  {/* Topo: Nome do dia e Switch */}
+                <div key={key} className="flex flex-col bg-white p-3 rounded-xl border border-stone-200 shadow-sm hover:border-brand-200 transition-colors gap-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2.5">
                       <label className="relative inline-flex items-center cursor-pointer shrink-0">
                         <input 
                           type="checkbox" 
@@ -459,39 +458,41 @@ export default function ConfiguracoesPage() {
                           checked={config.isOpen}
                           onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, isOpen: e.target.checked } })}
                         />
-                        <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
                       </label>
-                      <span className={`font-bold text-[15px] ${config.isOpen ? 'text-stone-900' : 'text-stone-400'}`}>{label}</span>
+                      <span className={`font-bold text-sm ${config.isOpen ? 'text-stone-900' : 'text-stone-400'}`}>{label}</span>
                     </div>
+                    {config.isOpen && config.is24Hours && (
+                      <span className="text-[10px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-md uppercase tracking-wide border border-brand-100">24h</span>
+                    )}
                   </div>
 
-                  {/* Base: Configurações de tempo (só se estiver aberto) */}
                   {config.isOpen && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 pt-3 mt-1">
-                      <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-stone-700 bg-stone-50 px-3 py-2 rounded-xl hover:bg-stone-100 transition-colors shrink-0 border border-stone-100">
+                    <div className="flex items-center justify-between pl-11">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-stone-600 hover:text-stone-900 transition-colors">
                         <input 
                           type="checkbox"
                           checked={config.is24Hours}
                           onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, is24Hours: e.target.checked } })}
-                          className="w-4 h-4 rounded text-brand-500 border-stone-300 focus:ring-brand-500"
+                          className="w-3.5 h-3.5 rounded text-brand-500 border-stone-300 focus:ring-brand-500"
                         />
                         24 Horas
                       </label>
 
                       {!config.is24Hours && (
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <input 
                             type="time" 
                             value={config.open}
                             onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, open: e.target.value } })}
-                            className="bg-white border border-stone-200 rounded-xl px-2 sm:px-3 py-2 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-[90px] sm:w-[100px] text-center"
+                            className="bg-stone-50 border border-stone-200 rounded-lg px-2 py-1 text-xs font-bold text-stone-700 outline-none focus:border-brand-500 focus:bg-white transition-all w-[70px] text-center"
                           />
-                          <span className="text-stone-400 text-xs font-bold uppercase tracking-wider">até</span>
+                          <span className="text-stone-400 text-[10px] font-bold uppercase tracking-wider">até</span>
                           <input 
                             type="time" 
                             value={config.close}
                             onChange={(e) => setBusinessHours({ ...businessHours, [key]: { ...config, close: e.target.value } })}
-                            className="bg-white border border-stone-200 rounded-xl px-2 sm:px-3 py-2 text-sm font-bold text-stone-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all w-[90px] sm:w-[100px] text-center"
+                            className="bg-stone-50 border border-stone-200 rounded-lg px-2 py-1 text-xs font-bold text-stone-700 outline-none focus:border-brand-500 focus:bg-white transition-all w-[70px] text-center"
                           />
                         </div>
                       )}
