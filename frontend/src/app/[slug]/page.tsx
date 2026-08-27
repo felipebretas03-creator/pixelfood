@@ -226,7 +226,7 @@ export default function Home() {
       {/* Main Content Container (Limited width on Desktop) */}
       <div className="lg:max-w-6xl lg:mx-auto lg:w-full lg:px-8 w-full flex flex-col">
 
-      {settings?.isOpen === false && (
+      {settings?.isCurrentlyOpen === false && (
         <div className="mx-4 mt-4 lg:mt-8 mb-2 bg-white border border-red-100 p-4 rounded-3xl shadow-[0_8px_30px_rgba(239,68,68,0.12)] z-30 flex items-center gap-4 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-red-500 rounded-l-3xl"></div>
           <div className="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center shrink-0 ml-2 shadow-inner">
@@ -425,7 +425,7 @@ export default function Home() {
       <ProductModal 
         product={selectedProduct} 
         onClose={() => setSelectedProduct(null)} 
-        isStoreOpen={settings?.isOpen ?? true}
+        isStoreOpen={settings?.isCurrentlyOpen ?? true}
       />
 
       <AddressModal 

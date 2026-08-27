@@ -670,15 +670,15 @@ export default function CarrinhoPage() {
 
         <button 
           onClick={handleCheckout}
-          disabled={isCheckoutLoading || deliverySettings?.isOpen === false}
-          className={`w-full rounded-full py-4 px-6 flex items-center justify-center font-bold shadow-lg transition-transform active:scale-[0.98] ${(isCheckoutLoading || deliverySettings?.isOpen === false) ? 'bg-stone-300 text-stone-500 cursor-not-allowed shadow-none' : 'bg-brand-500 text-white shadow-brand-500/30'}`}
+          disabled={isCheckoutLoading || deliverySettings?.isCurrentlyOpen === false}
+          className={`w-full rounded-full py-4 px-6 flex items-center justify-center font-bold shadow-lg transition-transform active:scale-[0.98] ${(isCheckoutLoading || deliverySettings?.isCurrentlyOpen === false) ? 'bg-stone-300 text-stone-500 cursor-not-allowed shadow-none' : 'bg-brand-500 text-white shadow-brand-500/30'}`}
         >
           {isCheckoutLoading ? (
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 border-2 border-stone-500 border-t-transparent rounded-full animate-spin" />
               <span>Processando...</span>
             </div>
-          ) : deliverySettings?.isOpen === false ? (
+          ) : deliverySettings?.isCurrentlyOpen === false ? (
             'Loja Fechada'
           ) : (
             'Fazer Pedido'
