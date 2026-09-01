@@ -403,10 +403,12 @@ export const getSubscriptionCheckout = async (req: Request, res: Response) => {
     let customerId = currentSub?.providerCustomerId;
     if (!customerId) {
       try {
+        // Asaas aceita apenas dígitos no cpfCnpj
+        const cpfCnpjLimpo = (tenant.cpfCnpj || '').replace(/\D/g, '');
         const custRes = await asaasClient.post('/customers', {
           name: tenant.name,
           email: tenant.email,
-          cpfCnpj: tenant.cpfCnpj,
+          cpfCnpj: cpfCnpjLimpo,
           notificationDisabled: true
         });
         customerId = custRes.data.id;
