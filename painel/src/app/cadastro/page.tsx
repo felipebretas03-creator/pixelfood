@@ -32,6 +32,11 @@ export default function CadastroPage() {
         setError(data.error || "Erro ao criar conta");
         return;
       }
+      // Salva o token para que o usuário já esteja autenticado na tela de assinatura
+      if (data.token) {
+        localStorage.setItem("pixelfood_token", data.token);
+        localStorage.setItem("pixelfood_user", JSON.stringify(data.tenant));
+      }
       router.push("/assinatura");
     } catch (err) {
       setError("Erro de conexão");
