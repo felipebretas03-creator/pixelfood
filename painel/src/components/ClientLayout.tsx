@@ -89,7 +89,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
-    if (mounted && isHydrated && !isAuthenticated && pathname !== '/login' && pathname !== '/cadastro') {
+    if (mounted && isHydrated && !isAuthenticated && pathname !== '/login' && pathname !== '/cadastro' && pathname !== '/assinatura') {
       timeout = setTimeout(() => {
         router.push('/login');
       }, 50);
@@ -131,7 +131,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   };
 
   if (!mounted || !isHydrated) return null;
-  if (!isAuthenticated && pathname !== '/login' && pathname !== '/cadastro') return null;
+  if (!isAuthenticated && pathname !== '/login' && pathname !== '/cadastro' && pathname !== '/assinatura') return null;
 
   // Se for painel master, o layout será delegado para app/master/layout.tsx
   if (pathname?.startsWith('/master')) {
