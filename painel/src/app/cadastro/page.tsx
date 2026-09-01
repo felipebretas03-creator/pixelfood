@@ -32,7 +32,7 @@ export default function CadastroPage() {
         setError(data.error || "Erro ao criar conta");
         return;
       }
-      router.push("/login");
+      router.push("/assinatura");
     } catch (err) {
       setError("Erro de conexão");
     } finally {
