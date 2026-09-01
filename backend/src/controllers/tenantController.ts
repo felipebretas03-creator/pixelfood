@@ -406,6 +406,7 @@ export const getSubscriptionCheckout = async (req: Request, res: Response) => {
         const custRes = await asaasClient.post('/customers', {
           name: tenant.name,
           email: tenant.email,
+          cpfCnpj: tenant.cpfCnpj,
           notificationDisabled: true
         });
         customerId = custRes.data.id;
