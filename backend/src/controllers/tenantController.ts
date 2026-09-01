@@ -13,7 +13,7 @@ export const getSettings = async (req: Request, res: Response) => {
   
   const tenant = await prisma.tenant.findUnique({
     where: { id: req.tenantId! },
-    select: { subscriptionStatus: true }
+    select: { subscriptionStatus: true, lifetimeExpiresAt: true }
   });
   const isBlocked = tenant?.subscriptionStatus === 'PAST_DUE' || tenant?.subscriptionStatus === 'SUSPENDED' || tenant?.subscriptionStatus === 'CANCELED';
 
@@ -27,6 +27,7 @@ export const getSettings = async (req: Request, res: Response) => {
     isOpen: isBlocked ? false : settings.isOpen,
     isCurrentlyOpen,
     subscriptionStatus: tenant?.subscriptionStatus,
+    lifetimeExpiresAt: tenant?.lifetimeExpiresAt,
     mpAccessToken: settings.mpAccessToken ? maskPaymentCredential(settings.mpAccessToken) : '',
     mpPublicKey: settings.mpPublicKey || '',
   };

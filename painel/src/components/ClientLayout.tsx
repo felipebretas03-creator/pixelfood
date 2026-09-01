@@ -23,6 +23,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const router = useRouter();
   const [isStoreOpen, setIsStoreOpen] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [lifetimeExpiresAt, setLifetimeExpiresAt] = useState<string | null>(null);
   const { isAuthenticated, logout, tenant } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -67,6 +68,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           if (data) {
             if (typeof data.isCurrentlyOpen === 'boolean') setIsStoreOpen(data.isCurrentlyOpen);
             if (data.subscriptionStatus) setSubscriptionStatus(data.subscriptionStatus);
+            if (data.lifetimeExpiresAt) setLifetimeExpiresAt(data.lifetimeExpiresAt);
           }
         })
         .catch(console.error);
@@ -96,6 +98,29 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     }
     return () => clearTimeout(timeout);
   }, [mounted, isHydrated, isAuthenticated, pathname, router]);
+
+  useEffect(() => {
+    // Redireciona para /assinatura se autenticado mas sem plano ativo/lifetime e não master
+    if (
+      mounted && 
+      isHydrated && 
+      isAuthenticated && 
+      pathname !== '/assinatura' && 
+      pathname !== '/login' && 
+      pathname !== '/cadastro' &&
+      !pathname?.startsWith('/master') &&
+      !tenant?.isMaster
+    ) {
+      if (subscriptionStatus !== null) { // Só verifica após receber do backend
+        const isSubValid = subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIALING';
+        const hasLifetime = lifetimeExpiresAt ? new Date(lifetimeExpiresAt) > new Date() : false;
+        
+        if (!isSubValid && !hasLifetime) {
+          router.push('/assinatura');
+        }
+      }
+    }
+  }, [mounted, isHydrated, isAuthenticated, pathname, router, subscriptionStatus, lifetimeExpiresAt, tenant?.isMaster]);
 
   const handleLogout = () => {
     logout();
