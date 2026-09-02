@@ -117,7 +117,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       !tenant?.isMaster
     ) {
       if (subscriptionStatus !== null) { // Só verifica após receber do backend
-        const isSubValid = subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIALING';
+        const isSubValid = subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIALING' || subscriptionStatus === 'LIFETIME';
         const hasLifetime = lifetimeExpiresAt ? new Date(lifetimeExpiresAt) > new Date() : false;
         
         if (!isSubValid && !hasLifetime) {
