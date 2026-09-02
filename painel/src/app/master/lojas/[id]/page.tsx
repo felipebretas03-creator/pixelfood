@@ -321,6 +321,11 @@ export default function LojaDetalhes() {
             const data = await res.json();
             const authData = JSON.parse(localStorage.getItem('painel-auth-storage') || '{}');
             if (authData.state) {
+              localStorage.setItem('painel-master-impersonate', JSON.stringify({
+                token: authData.state.token,
+                user: authData.state.user
+              }));
+              
               authData.state.token = data.token;
               authData.state.tenant = data.tenant;
               authData.state.user = { ...authData.state.user, role: 'OWNER' };

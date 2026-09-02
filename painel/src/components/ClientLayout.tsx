@@ -26,11 +26,16 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const [lifetimeExpiresAt, setLifetimeExpiresAt] = useState<string | null>(null);
   const { isAuthenticated, logout, tenant } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isImpersonating, setIsImpersonating] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== 'undefined') {
+      setIsImpersonating(!!localStorage.getItem('painel-master-impersonate'));
+    }
 
     
     // Unlock Audio Context on first click anywhere in the dashboard
@@ -165,6 +170,30 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <>
+      {/* Impersonate Banner */}
+      {isImpersonating && (
+        <div className="bg-brand-900 text-white text-center py-2 px-4 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-sm font-medium z-[60] relative shadow-md">
+          <span>Você está acessando o painel desta loja pelo acesso Master.</span>
+          <button 
+            onClick={() => {
+              const masterData = JSON.parse(localStorage.getItem('painel-master-impersonate') || '{}');
+              const authData = JSON.parse(localStorage.getItem('painel-auth-storage') || '{}');
+              if (masterData.token && authData.state) {
+                authData.state.token = masterData.token;
+                authData.state.user = masterData.user;
+                authData.state.tenant = null;
+                localStorage.setItem('painel-auth-storage', JSON.stringify(authData));
+                localStorage.removeItem('painel-master-impersonate');
+                window.location.href = '/master/lojas';
+              }
+            }}
+            className="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-full transition-colors shadow-sm"
+          >
+            Voltar para o Painel Master
+          </button>
+        </div>
+      )}
+
       {/* Top Navigation Bar */}
       {(pathname !== "/aovivo" && pathname !== "/login" && pathname !== "/cadastro") && (
         <header className="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
