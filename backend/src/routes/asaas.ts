@@ -64,7 +64,7 @@ router.post('/signup', async (req, res) => {
       billingType: 'UNDEFINED', // Let customer choose (PIX, BOLETO, CREDIT_CARD)
       value: plan.priceCents / 100,
       nextDueDate: today.toISOString().split('T')[0],
-      description: `Assinatura SaaS PixelFood - ${plan.name}`,
+      description: `Assinatura SaaS Pixeleats - ${plan.name}`,
       cycle: plan.billingCycle,
       externalReference: signupIntent.id // Muito importante para vincular no webhook!
     });

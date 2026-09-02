@@ -333,7 +333,7 @@ router.post('/tenants', async (req, res) => {
           billingType: 'CREDIT_CARD',
           value: plan.priceCents / 100,
           nextDueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          description: `Assinatura PixelFood - ${plan.name}`
+          description: `Assinatura Pixeleats - ${plan.name}`
         });
 
         await prisma.subscription.create({
@@ -640,7 +640,7 @@ router.post('/tenants/:id/manual-subscription', async (req, res) => {
     const asaasSub = await asaasService.createSubscription(customerId, {
       value: plan.priceCents / 100, // asaas uses reais (float)
       cycle: plan.billingCycle,
-      description: `Assinatura ${plan.name} - PixelFood`
+      description: `Assinatura ${plan.name} - Pixeleats`
     });
 
     // Remover assinaturas anteriores no nosso banco

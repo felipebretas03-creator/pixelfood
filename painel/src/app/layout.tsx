@@ -11,8 +11,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Painel Lojista - PixelFood",
-  description: "Gerencie seu restaurante no PixelFood",
+  title: "Painel Lojista - Pixeleats",
+  description: "Gerencie seu restaurante no Pixeleats",
 };
 
 import { Toaster } from "@/components/Toaster";

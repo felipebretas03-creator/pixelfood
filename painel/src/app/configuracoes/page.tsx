@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { showToast } from '@/store/toastStore';
 
 export default function ConfiguracoesPage() {
-  const [storeName, setStoreName] = useState('PixelFood Delivery');
+  const [storeName, setStoreName] = useState('Pixeleats Delivery');
   const [primaryColor, setPrimaryColor] = useState('#22c55e');
   const [deliveryType, setDeliveryType] = useState('fixed');
   const [deliveryFee, setDeliveryFee] = useState('5.00');

@@ -15,7 +15,7 @@ export const queueWelcomeEmail = async (to: string, name: string, setupUrl?: str
   let htmlContent = `
     <div style="font-family: sans-serif; max-w-md; margin: auto; padding: 20px;">
       <h2>Olá, ${name}!</h2>
-      <p>Sua conta no <strong>PixelFood</strong> foi criada com sucesso.</p>
+      <p>Sua conta no <strong>Pixeleats</strong> foi criada com sucesso.</p>
       <p>Estamos muito felizes em ter você conosco. Acesse seu painel agora mesmo e comece a configurar seu cardápio digital e receber pedidos.</p>
       <br/>
       ${setupUrl ? `<a href="${setupUrl}" style="background: #2563EB; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Definir minha senha</a>` : ''}
@@ -25,7 +25,7 @@ export const queueWelcomeEmail = async (to: string, name: string, setupUrl?: str
   await prisma.emailOutbox.create({
     data: {
       to,
-      subject: 'Boas-vindas ao PixelFood! Defina sua senha.',
+      subject: 'Boas-vindas ao Pixeleats! Defina sua senha.',
       htmlBody: htmlContent,
       status: 'PENDING'
     }

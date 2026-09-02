@@ -43,7 +43,7 @@ export default function MasterLayout({ children }: { children: React.ReactNode }
       <header className="bg-stone-900 text-white border-b border-stone-800 sticky top-0 z-50 shadow-sm">
         <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="PixelFood" className="h-8 w-auto object-contain brightness-0 invert" />
+            <img src="/logo.png" alt="Pixeleats" className="h-8 w-auto object-contain brightness-0 invert" />
             <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider rounded-md border border-red-500/20">
               Master
             </span>

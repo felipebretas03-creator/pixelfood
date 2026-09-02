@@ -95,7 +95,7 @@ export function printOrderReceipt(order: PrintOrderData) {
       </div>
 
       <div class="text-center mt-2 sub-text" style="margin-left: 0;">
-        Impresso por PixelFood Delivery
+        Impresso por Pixeleats Delivery
       </div>
       
       <script>
@@ -216,7 +216,7 @@ export function printFechamentoReceipt(data: PrintFechamentoData) {
       </div>
 
       <div class="text-center mt-2 sub-text">
-        Impresso por PixelFood Delivery
+        Impresso por Pixeleats Delivery
       </div>
       
       <script>

@@ -32,17 +32,17 @@ export default function TermosPage() {
       <div className="flex-1 p-6 max-w-2xl mx-auto w-full">
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-200">
           <div className="prose prose-stone prose-sm max-w-none">
-            <h2 className="text-xl font-black text-stone-900 mb-4">Termos de Uso do PixelFood</h2>
+            <h2 className="text-xl font-black text-stone-900 mb-4">Termos de Uso do Pixeleats</h2>
             <p className="text-stone-500 mb-6">Última atualização: Julho de 2026</p>
 
             <h3 className="font-bold text-stone-800 text-lg mb-2">1. Aceitação dos Termos</h3>
             <p className="text-stone-600 mb-6 leading-relaxed">
-              Ao acessar e utilizar o aplicativo PixelFood, você concorda em cumprir e ser regido por estes Termos de Uso. Se você não concordar com qualquer parte destes termos, não deve usar nosso serviço.
+              Ao acessar e utilizar o aplicativo Pixeleats, você concorda em cumprir e ser regido por estes Termos de Uso. Se você não concordar com qualquer parte destes termos, não deve usar nosso serviço.
             </p>
 
             <h3 className="font-bold text-stone-800 text-lg mb-2">2. Uso do Serviço</h3>
             <p className="text-stone-600 mb-6 leading-relaxed">
-              O PixelFood é uma plataforma de delivery de alimentos. Nós nos esforçamos para garantir que todas as descrições de produtos, preços e disponibilidades sejam precisas, mas erros podem ocorrer. Reservamo-nos o direito de cancelar pedidos caso haja erro no sistema ou falta de ingredientes.
+              O Pixeleats é uma plataforma de delivery de alimentos. Nós nos esforçamos para garantir que todas as descrições de produtos, preços e disponibilidades sejam precisas, mas erros podem ocorrer. Reservamo-nos o direito de cancelar pedidos caso haja erro no sistema ou falta de ingredientes.
             </p>
 
             <h3 className="font-bold text-stone-800 text-lg mb-2">3. Política de Privacidade</h3>

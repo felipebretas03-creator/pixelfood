@@ -55,7 +55,7 @@ export default function CadastroPage() {
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8 mt-2">
-          <img src="/logo.png" alt="PixelFood" className="h-12 w-auto mb-2 object-contain" />
+          <img src="/logo.png" alt="Pixeleats" className="h-12 w-auto mb-2 object-contain" />
           <h1 className="text-stone-500 text-sm mt-1">Crie sua conta de Lojista</h1>
         </div>
 

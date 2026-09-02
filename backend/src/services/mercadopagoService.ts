@@ -33,7 +33,7 @@ export const createPixPayment = async (tenantId: string, order: any, customerInf
   
   const paymentData = {
     transaction_amount: order.totalCents / 100,
-    description: `Pedido ${order.orderNumber} - PixelFood`,
+    description: `Pedido ${order.orderNumber} - Pixeleats`,
     payment_method_id: 'pix',
     payer: {
       email: customerInfo.email || 'customer@pixelfood.com.br',
@@ -87,7 +87,7 @@ export const createCardPreference = async (tenantId: string, order: any) => {
     items: [
       {
         id: order.id,
-        title: `Pedido ${order.orderNumber} - PixelFood`,
+        title: `Pedido ${order.orderNumber} - Pixeleats`,
         quantity: 1,
         unit_price: order.totalCents / 100
       }

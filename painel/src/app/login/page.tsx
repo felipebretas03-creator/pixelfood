@@ -56,7 +56,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-stone-50 flex flex-col justify-center items-center p-6">
       <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-stone-100">
         <div className="flex flex-col items-center mb-8">
-          <img src="/logo.png" alt="PixelFood" className="h-12 w-auto mb-2 object-contain" />
+          <img src="/logo.png" alt="Pixeleats" className="h-12 w-auto mb-2 object-contain" />
           <h1 className="text-stone-500 text-sm mt-1">Acesso do Lojista</h1>
         </div>
 

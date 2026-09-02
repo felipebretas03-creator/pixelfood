@@ -172,7 +172,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             {/* Logo and Mobile Actions */}
             <div className="flex items-center flex-1 justify-between md:justify-start md:mr-8 md:flex-none">
               <div className="flex items-center gap-3">
-                <img src="/logo.png" alt="PixelFood" className="h-8 w-auto object-contain" />
+                <img src="/logo.png" alt="Pixeleats" className="h-8 w-auto object-contain" />
               </div>
               
               {/* Copiar Link - Mobile */}

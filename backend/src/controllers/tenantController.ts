@@ -433,7 +433,7 @@ export const getSubscriptionCheckout = async (req: Request, res: Response) => {
       value: plan.priceCents / 100,
       nextDueDate: today.toISOString().split('T')[0],
       cycle: plan.billingCycle === 'YEARLY' ? 'YEARLY' : 'MONTHLY',
-      description: `Assinatura PixelFood - ${plan.name}`
+      description: `Assinatura Pixeleats - ${plan.name}`
     });
     
     // Busca a cobrança recém criada
