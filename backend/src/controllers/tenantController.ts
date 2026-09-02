@@ -15,7 +15,8 @@ export const getSettings = async (req: Request, res: Response) => {
     where: { id: req.tenantId! },
     select: { subscriptionStatus: true, lifetimeExpiresAt: true }
   });
-  const isBlocked = tenant?.subscriptionStatus === 'PAST_DUE' || tenant?.subscriptionStatus === 'SUSPENDED' || tenant?.subscriptionStatus === 'CANCELED';
+  const hasLifetime = tenant?.lifetimeExpiresAt ? new Date(tenant.lifetimeExpiresAt).getTime() > Date.now() : false;
+  const isBlocked = !hasLifetime && (tenant?.subscriptionStatus === 'PAST_DUE' || tenant?.subscriptionStatus === 'SUSPENDED' || tenant?.subscriptionStatus === 'CANCELED');
 
   const { encryptPaymentCredential, maskPaymentCredential } = require('../services/cryptoService');
   const { checkStoreIsOpen } = require('../utils/storeStatus');

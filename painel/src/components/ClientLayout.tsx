@@ -316,6 +316,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
       {/* Modal de Bloqueio por Inadimplência */}
       {(subscriptionStatus === 'PAST_DUE' || subscriptionStatus === 'SUSPENDED' || subscriptionStatus === 'CANCELED') && 
+        (!lifetimeExpiresAt || new Date(lifetimeExpiresAt) <= new Date()) &&
         pathname !== '/assinatura' && pathname !== '/login' && pathname !== '/cadastro' && !pathname?.startsWith('/master') && (
         <div style={{ zIndex: 99999 }} className="fixed inset-0 flex items-center justify-center bg-stone-900/60 backdrop-blur-md">
            <div className="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl flex flex-col items-center text-center mx-4 relative z-10">
