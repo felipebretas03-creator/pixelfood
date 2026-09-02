@@ -310,8 +310,16 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       )}
 
       {/* Main Content Area */}
-      <main className={(pathname === "/aovivo" || pathname === "/login" || pathname === "/cadastro") ? "flex-1 w-full" : "flex-1 max-w-[1400px] w-full mx-auto px-6 py-8 pb-24 md:pb-8"}>
-        {children}
+      <main className={(pathname === "/aovivo" || pathname === "/login" || pathname === "/cadastro") ? "flex-1 w-full flex flex-col" : "flex-1 max-w-[1400px] w-full mx-auto px-6 py-8 pb-24 md:pb-8 flex flex-col"}>
+        <div className="flex-1 w-full">
+          {children}
+        </div>
+        
+        {pathname !== "/login" && pathname !== "/cadastro" && (
+          <footer className="w-full text-center py-6 mt-auto text-stone-400 text-xs md:text-sm">
+            &copy; {new Date().getFullYear()} Pixeleats. Todos os direitos reservados. Uma empresa do grupo <a href="https://pixeloo.com.br/" target="_blank" rel="noopener noreferrer" className="hover:text-stone-900 transition-colors underline">Pixeloo</a>.
+          </footer>
+        )}
       </main>
 
       {/* Modal de Bloqueio por Inadimplência */}

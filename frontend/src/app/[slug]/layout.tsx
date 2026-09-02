@@ -63,7 +63,12 @@ export default async function SlugLayout({
       '--color-brand-500': safeColor,
       '--color-brand-600': safeColor,
     } as React.CSSProperties} className="flex flex-col min-h-screen w-full">
-      {children}
+      <div className="flex-1 flex flex-col w-full pb-16">
+        {children}
+        <footer className="w-full text-center py-6 mt-auto text-stone-400 text-xs">
+          &copy; {new Date().getFullYear()} Pixeleats. Todos os direitos reservados. Uma empresa do grupo <a href="https://pixeloo.com.br/" target="_blank" rel="noopener noreferrer" className="underline">Pixeloo</a>.
+        </footer>
+      </div>
       <Toaster />
       <BottomNavigation />
     </div>

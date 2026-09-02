@@ -101,8 +101,14 @@ export default function MasterLayout({ children }: { children: React.ReactNode }
       </nav>
 
       {/* Main Content Area */}
-      <main className={`flex-1 max-w-[1400px] w-full mx-auto pb-24 md:pb-8 ${pathname === '/master' ? 'px-4 py-6 md:px-8 md:py-10' : 'px-6 py-8'}`}>
-        {children}
+      <main className={`flex-1 flex flex-col max-w-[1400px] w-full mx-auto pb-24 md:pb-8 ${pathname === '/master' ? 'px-4 py-6 md:px-8 md:py-10' : 'px-6 py-8'}`}>
+        <div className="flex-1 w-full">
+          {children}
+        </div>
+        
+        <footer className="w-full text-center py-6 mt-auto text-stone-400 text-xs md:text-sm">
+          &copy; {new Date().getFullYear()} Pixeleats. Todos os direitos reservados. Uma empresa do grupo <a href="https://pixeloo.com.br/" target="_blank" rel="noopener noreferrer" className="hover:text-stone-900 transition-colors underline">Pixeloo</a>.
+        </footer>
       </main>
     </div>
   );
