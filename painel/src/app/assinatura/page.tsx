@@ -32,8 +32,10 @@ export default function AssinaturaPage() {
       const data = await res.json();
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
+      } else if (data.redirectUrl) {
+        router.push(data.redirectUrl);
       } else {
-        alert(data.error || "Não foi possível gerar o link de pagamento.");
+        alert(data.error || "Não foi possível processar a assinatura.");
         setIsProcessing(false);
       }
     } catch (e) {
@@ -105,18 +107,23 @@ export default function AssinaturaPage() {
 
       <button
         onClick={handleCheckout}
-        disabled={isProcessing || !selectedPlanId}
-        className="w-full md:w-auto px-12 py-4 bg-brand-500 text-white text-lg font-bold rounded-2xl shadow-xl shadow-brand-500/30 hover:bg-brand-600 hover:shadow-brand-500/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:pointer-events-none mt-4"
+        disabled={isProcessing}
+        className="w-full max-w-sm flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white py-4 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-70 disabled:active:scale-100"
       >
         {isProcessing ? (
-          <Loader2 className="w-6 h-6 animate-spin" />
+          <>
+            <Loader2 className="w-6 h-6 animate-spin" />
+            Iniciando Teste...
+          </>
         ) : (
-          <CreditCard className="w-6 h-6" />
+          <>
+            <CreditCard className="w-6 h-6" />
+            Começar Teste Grátis de 7 Dias
+          </>
         )}
-        {isProcessing ? "Gerando Pagamento..." : "Ir para o Pagamento (Asaas)"}
       </button>
       
-      <p className="text-stone-400 text-sm font-medium mt-2">Você será redirecionado para o ambiente seguro do Asaas.</p>
+      <p className="text-stone-400 text-sm font-medium mt-2">Você não precisa inserir o cartão de crédito agora. A cobrança será enviada após os 7 dias.</p>
     </div>
   );
 }

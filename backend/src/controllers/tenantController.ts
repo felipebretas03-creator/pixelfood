@@ -426,7 +426,8 @@ export const getSubscriptionCheckout = async (req: Request, res: Response) => {
     
     // Cria nova assinatura no Asaas
     const today = new Date();
-    today.setDate(today.getDate() + 1);
+    today.setDate(today.getDate() + 7); // Vence em 7 dias (período de teste)
+
     
     const subRes = await asaasClient.post('/subscriptions', {
       customer: customerId,
@@ -437,15 +438,14 @@ export const getSubscriptionCheckout = async (req: Request, res: Response) => {
       description: `Assinatura Pixeleats - ${plan.name}`
     });
     
-    // Busca a cobrança recém criada
-    const chargeRes = await asaasClient.get(`/payments?subscription=${subRes.data.id}`);
-    const invoiceUrl = chargeRes.data.data[0]?.invoiceUrl || subRes.data.invoiceUrl;
+    // Com o teste grátis de 7 dias ativado, não precisamos redirecionar o usuário para o Asaas agora.
+    // O Asaas vai enviar a cobrança automaticamente no 7º dia.
     
     // Atualiza o banco com a nova assinatura
     if (currentSub) {
       await prisma.subscription.update({
         where: { id: currentSub.id },
-        data: { planId: plan.id, providerSubscriptionId: subRes.data.id, providerCustomerId: customerId }
+        data: { planId: plan.id, providerSubscriptionId: subRes.data.id, providerCustomerId: customerId, status: 'ACTIVE' }
       });
     } else {
       await prisma.subscription.create({
@@ -455,12 +455,12 @@ export const getSubscriptionCheckout = async (req: Request, res: Response) => {
           provider: 'ASAAS',
           providerSubscriptionId: subRes.data.id,
           providerCustomerId: customerId,
-          status: 'PENDING'
+          status: 'ACTIVE'
         }
       });
     }
     
-    return res.json({ checkoutUrl: invoiceUrl });
+    return res.json({ success: true, redirectUrl: '/' });
 
   } catch (error: any) {
     console.error('Erro getSubscriptionCheckout:', error.response?.data || error);
