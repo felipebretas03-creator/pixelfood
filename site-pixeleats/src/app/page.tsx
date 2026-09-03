@@ -23,7 +23,7 @@ export default function LandingPage() {
               Entrar
             </Link>
             <Link href="https://painel-pixelfood.vercel.app/cadastro" className="text-sm font-medium bg-brand-600 text-white px-4 py-2 rounded-full hover:bg-brand-700 transition-all shadow-sm hover:shadow">
-              Começar Grátis
+              Teste Grátis
             </Link>
           </div>
         </div>
@@ -48,7 +48,7 @@ export default function LandingPage() {
               
               <div className="flex flex-col sm:flex-row items-center gap-4 mb-10">
                 <Link href="https://painel-pixelfood.vercel.app/cadastro" className="flex items-center justify-center gap-2 w-full sm:w-auto bg-brand-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-brand-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                  Criar conta agora
+                  Teste grátis por 7 dias
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <a href="#funcionalidades" className="flex items-center justify-center gap-2 w-full sm:w-auto bg-white border border-stone-200 text-stone-700 px-8 py-4 rounded-full text-lg font-medium hover:bg-stone-50 hover:border-stone-300 transition-all">
@@ -329,10 +329,10 @@ export default function LandingPage() {
                   </div>
                 </div>
                 
-                <Link href="https://painel-pixelfood.vercel.app/cadastro" className="w-full text-center bg-brand-600 text-white py-4 rounded-xl font-medium hover:bg-brand-500 transition-colors shadow-lg shadow-brand-900/20">
-                  Assinar Agora
+                <Link href="https://painel-pixelfood.vercel.app/cadastro" className="w-full flex items-center justify-center gap-2 text-center bg-brand-600 text-white py-4 rounded-xl font-medium hover:bg-brand-500 transition-colors shadow-lg shadow-brand-900/20">
+                  Começar Teste Grátis de 7 Dias
                 </Link>
-                <p className="text-center text-stone-500 text-xs mt-4">Cancele a qualquer momento.</p>
+                <p className="text-center text-stone-500 text-xs mt-4">Sem compromisso. Cancele a qualquer momento.</p>
               </div>
             </div>
           </div>
