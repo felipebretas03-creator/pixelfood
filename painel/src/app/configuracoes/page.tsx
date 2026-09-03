@@ -42,6 +42,10 @@ export default function ConfiguracoesPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [isCanceling, setIsCanceling] = useState(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -51,6 +55,35 @@ export default function ConfiguracoesPage() {
   const handleLogout = () => {
     logout();
     router.push('/login');
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!cancelReason.trim()) {
+      showToast('Por favor, informe o motivo do cancelamento.', 'error');
+      return;
+    }
+    
+    setIsCanceling(true);
+    try {
+      const res = await apiFetch('/api/subscription/cancel', {
+        method: 'POST',
+        body: JSON.stringify({ reason: cancelReason })
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        showToast('Assinatura cancelada com sucesso.', 'success');
+        window.location.href = '/assinatura';
+      } else {
+        showToast(data.error || 'Erro ao cancelar assinatura.', 'error');
+        setIsCanceling(false);
+      }
+    } catch (error) {
+      console.error(error);
+      showToast('Erro de conexão.', 'error');
+      setIsCanceling(false);
+    }
   };
 
   useEffect(() => {
@@ -735,8 +768,64 @@ export default function ConfiguracoesPage() {
               </div>
             </div>
           </div>
+          
+          {/* Danger Zone */}
+          <div className="mt-12 bg-red-50 border border-red-200 rounded-2xl p-6">
+            <h3 className="font-bold text-red-900 text-lg mb-2">Zona de Perigo</h3>
+            <p className="text-sm text-red-700 mb-6">Ao cancelar sua assinatura, sua loja sairá do ar imediatamente e você perderá acesso ao painel. Esta ação não pode ser desfeita automaticamente.</p>
+            <button
+              onClick={() => setShowCancelModal(true)}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-medium transition-colors text-sm"
+            >
+              Cancelar Assinatura
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Cancel Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
+            <button 
+              onClick={() => !isCanceling && setShowCancelModal(false)}
+              className="absolute top-6 right-6 text-stone-400 hover:text-stone-600 transition-colors"
+              disabled={isCanceling}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+            
+            <h3 className="text-2xl font-bold text-stone-900 mb-2">Cancelar Assinatura?</h3>
+            <p className="text-stone-500 text-sm mb-6">Sentimos muito em ver você partir. Por favor, nos conte o motivo do cancelamento para podermos melhorar (obrigatório).</p>
+            
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Ex: Encerrei as atividades do restaurante..."
+              className="w-full bg-stone-50 border border-stone-200 rounded-xl p-4 text-sm font-medium outline-none focus:border-red-500 focus:bg-white transition-all resize-none h-32 mb-6"
+              disabled={isCanceling}
+            />
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 px-4 py-3 rounded-xl font-medium transition-colors"
+                disabled={isCanceling}
+              >
+                Voltar
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={isCanceling || !cancelReason.trim()}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isCanceling && <Loader2 className="w-4 h-4 animate-spin" />}
+                Confirmar Cancelamento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

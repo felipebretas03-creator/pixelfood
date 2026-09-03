@@ -394,6 +394,7 @@ model Subscription {
   gracePeriodEnd         DateTime?
   cancelAtPeriodEnd      Boolean   @default(false)
   canceledAt             DateTime?
+  cancelReason           String?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 

@@ -467,3 +467,48 @@ export const getSubscriptionCheckout = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Erro ao gerar checkout' });
   }
 };
+
+export const cancelSubscription = async (req: Request, res: Response) => {
+  try {
+    const { reason } = req.body;
+    if (!reason) {
+       res.status(400).json({ error: 'O motivo do cancelamento é obrigatório.' });
+       return;
+    }
+
+    const tenantId = req.tenantId;
+
+    const sub = await prisma.subscription.findFirst({
+      where: { tenantId, status: 'ACTIVE' },
+    });
+
+    if (!sub) {
+       res.status(404).json({ error: 'Nenhuma assinatura ativa encontrada.' });
+       return;
+    }
+
+    if (sub.providerSubscriptionId) {
+      const { asaasService } = require('../services/asaasService');
+      await asaasService.cancelSubscription(sub.providerSubscriptionId);
+    }
+
+    await prisma.subscription.update({
+      where: { id: sub.id },
+      data: {
+        status: 'CANCELED',
+        canceledAt: new Date(),
+        cancelReason: reason
+      }
+    });
+
+    await prisma.tenant.update({
+      where: { id: tenantId! },
+      data: { subscriptionStatus: 'CANCELED' }
+    });
+
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error('Erro ao cancelar assinatura:', err);
+    res.status(500).json({ error: 'Erro ao cancelar assinatura.' });
+  }
+};

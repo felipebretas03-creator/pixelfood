@@ -41,8 +41,9 @@ router.get('/loyalty', getLoyalty);
 router.put('/loyalty', ownerMiddleware, updateLoyalty);
 
 // --- Assinaturas ---
-import { getPlans, getSubscriptionCheckout } from '../controllers/tenantController';
+import { getPlans, getSubscriptionCheckout, cancelSubscription } from '../controllers/tenantController';
 router.get('/plans', getPlans);
 router.get('/subscription/checkout', ownerMiddleware, getSubscriptionCheckout);
+router.post('/subscription/cancel', ownerMiddleware, cancelSubscription);
 
 export default router;
