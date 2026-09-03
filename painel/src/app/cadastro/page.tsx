@@ -4,10 +4,12 @@ import { Store, ArrowRight, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 export default function CadastroPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuthStore();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,7 +35,17 @@ export default function CadastroPage() {
         return;
       }
       // Salva o token para que o usuário já esteja autenticado na tela de assinatura
-      if (data.token) {
+      if (data.token && data.tenant) {
+        login({
+          tenant: {
+            id: data.tenant.id,
+            name: data.tenant.name,
+            slug: data.tenant.slug,
+            email: data.tenant.email,
+            isMaster: false
+          },
+          token: data.token
+        });
         localStorage.setItem("pixelfood_token", data.token);
         localStorage.setItem("pixelfood_user", JSON.stringify(data.tenant));
       }
