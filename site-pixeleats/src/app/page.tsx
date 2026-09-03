@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, UtensilsCrossed, Smartphone, PieChart, CheckCircle2, Percent, Bike, CreditCard, Check, Megaphone, Users, Palette } from "lucide-react";
 import ContactSection from "@/components/ContactSection";
+import FaqSection from "@/components/FaqSection";
 
 export default function LandingPage() {
   return (
@@ -337,6 +338,9 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* FAQ Section */}
+        <FaqSection />
 
         {/* Contato Section */}
         <ContactSection />
