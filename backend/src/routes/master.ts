@@ -691,18 +691,50 @@ router.delete('/tenants/:id', async (req, res) => {
     const tenant = await prisma.tenant.findUnique({ where: { id } });
     if (!tenant) return res.status(404).json({ error: 'Loja não encontrada' });
 
-    // Deleta o tenant (Prisma cascade delete irá remover assinaturas, membros, etc)
+    // Obter todos os usuários que fazem parte deste tenant
+    const memberships = await prisma.membership.findMany({
+      where: { tenantId: id },
+      include: { user: true }
+    });
+
+    // Excluir os logs de auditoria (não tem cascade automático por não ter relation formal)
+    await prisma.auditLog.deleteMany({
+      where: { tenantId: id }
+    });
+
+    // Deleta o tenant (Prisma cascade delete irá remover assinaturas, produtos, categorias, pedidos, membros, etc)
     await prisma.tenant.delete({
       where: { id }
     });
 
-    // Registrar log
+    // Limpeza de usuários órfãos e SignupIntents associados
+    for (const membership of memberships) {
+      const remainingMemberships = await prisma.membership.count({
+        where: { userId: membership.userId }
+      });
+
+      if (remainingMemberships === 0) {
+        // Se o usuário não pertence a mais nenhuma loja, apaga o usuário completamente
+        await prisma.user.delete({
+          where: { id: membership.userId }
+        });
+        
+        // Também apaga intenções de cadastro antigas desse usuário
+        if (membership.user?.email) {
+          await prisma.signupIntent.deleteMany({
+            where: { email: membership.user.email }
+          });
+        }
+      }
+    }
+
+    // Registrar log da ação de exclusão
     await prisma.auditLog.create({
       data: {
         action: 'TENANT_DELETED',
-        actorUserId: (req as any).user?.id,
-        tenantId: id,
-        metadata: JSON.stringify({ name: tenant.name })
+        actorUserId: (req as any).userId || 'MASTER',
+        tenantId: null, // Deixamos nulo pois o tenant não existe mais
+        metadata: JSON.stringify({ tenantId: id, name: tenant.name })
       }
     });
 
