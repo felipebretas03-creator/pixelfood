@@ -55,7 +55,7 @@ router.post('/signup', async (req, res) => {
 
     // 3. Cria Payment/Subscription no Asaas
     const today = new Date();
-    today.setDate(today.getDate() + 1); // Vence amanhã
+    today.setDate(today.getDate() + 7); // Vence em 7 dias (período de teste)
     
     // Aqui usamos uma cobrança avulsa ou assinatura. 
     // Vamos criar uma assinatura (Subscription) para garantir a cobrança recorrente.

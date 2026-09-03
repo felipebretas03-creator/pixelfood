@@ -53,7 +53,7 @@ export const asaasService = {
         customer: customerId,
         billingType: 'UNDEFINED', // Permite Cartão, Boleto ou PIX
         value: plan.value,
-        nextDueDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0], // Começa a cobrar amanhã (ou pode ser hoje se preferir)
+        nextDueDate: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString().split('T')[0], // Começa a cobrar em 7 dias (teste)
         cycle: cycleAsaas,
         description: plan.description
       });
