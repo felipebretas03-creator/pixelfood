@@ -100,8 +100,9 @@ router.get('/tenants', async (req, res) => {
       data: tenants,
       meta: { total, page: Number(page), limit: Number(limit) }
     });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao listar lojas' });
+  } catch (error: any) {
+    console.error("Erro no GET /tenants:", error);
+    res.status(500).json({ error: 'Erro ao listar lojas', details: error?.message || String(error) });
   }
 });
 
