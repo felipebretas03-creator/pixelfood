@@ -69,7 +69,7 @@ export const useOrderStore = create<OrderState>()(
               })),
               paymentMethod: dbOrder.paymentMethod,
               needsChange: dbOrder.paymentMethod === 'CASH' && dbOrder.changeForCents > 0,
-              changeAmount: dbOrder.paymentMethod === 'CASH' && dbOrder.changeForCents > 0 ? ((dbOrder.totalCents + dbOrder.changeForCents)/100).toFixed(2) : undefined,
+              changeAmount: dbOrder.paymentMethod === 'CASH' && dbOrder.changeForCents > 0 ? (dbOrder.changeForCents/100).toFixed(2) : undefined,
               address: dbOrder.addressSnapshot ? {
                 street: dbOrder.addressSnapshot,
                 number: '',
