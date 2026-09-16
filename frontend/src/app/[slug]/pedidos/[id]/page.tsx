@@ -42,7 +42,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
             })),
             paymentMethod: data.paymentMethod,
             needsChange: data.paymentMethod === 'CASH' && data.changeForCents > 0,
-            changeAmount: data.paymentMethod === 'CASH' && data.changeForCents > 0 ? ((data.totalCents + data.changeForCents)/100).toFixed(2) : undefined,
+            changeAmount: data.paymentMethod === 'CASH' && data.changeForCents > 0 ? (data.changeForCents/100).toFixed(2) : undefined,
             address: data.addressSnapshot ? {
               street: data.addressSnapshot,
               number: '',
