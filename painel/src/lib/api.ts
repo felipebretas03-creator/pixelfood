@@ -39,11 +39,22 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
     headers
   };
 
+  const method = options.method || 'GET';
+
   try {
     const res = await fetch(finalUrl, fetchOptions);
-    if (!res.ok && options.method !== 'GET') {
+    
+    if (res.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('painel-auth-storage');
+        window.location.href = '/login';
+      }
+      throw new Error('Não autorizado. Redirecionando para o login...');
+    }
+
+    if (!res.ok && method !== 'GET') {
       const errorText = await res.text();
-      console.error(`API Error on ${options.method} ${finalUrl}: ${res.status} - ${errorText}`);
+      console.error(`API Error on ${method} ${finalUrl}: ${res.status} - ${errorText}`);
       if (typeof window !== 'undefined') {
         alert(`API Error: ${res.status} - ${errorText}`);
       }
@@ -51,9 +62,9 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
     }
     return res;
   } catch (error: any) {
-    if (options.method !== 'GET') {
-      console.error(`Network Error on ${options.method} ${finalUrl}:`, error);
-      if (typeof window !== 'undefined' && !error.message.includes('API Error')) {
+    if (method !== 'GET') {
+      console.error(`Network Error on ${method} ${finalUrl}:`, error);
+      if (typeof window !== 'undefined' && !error.message.includes('API Error') && !error.message.includes('Não autorizado')) {
         alert(`Network Error: ${error.message}. Is the backend running at ${finalUrl}?`);
       }
     }
