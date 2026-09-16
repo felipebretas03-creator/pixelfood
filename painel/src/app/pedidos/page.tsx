@@ -62,6 +62,7 @@ export default function PedidosKanban() {
   const [storeName, setStoreName] = useState('Restaurante');
   const autoPrintRef = useRef(false);
   const storeNameRef = useRef('Restaurante');
+  const updatingOrdersRef = useRef<Set<string>>(new Set());
 
   // Mantém as refs sincronizadas para o socket acessar o valor atualizado
   useEffect(() => {
@@ -109,8 +110,16 @@ export default function PedidosKanban() {
           
           setOrders(prev => {
             // Se houver novos pedidos que não estão em prev, podemos disparar alerta sonoro (opcional)
-            // Aqui fazemos um replace completo, mas mantendo a estabilidade dos cards
-            return formatted;
+            // Mantemos a estabilidade dos cards durante a atualização otimista
+            return formatted.map(newOrder => {
+              if (updatingOrdersRef.current.has(newOrder.id)) {
+                const existing = prev.find(o => o.id === newOrder.id);
+                if (existing) {
+                  return { ...newOrder, status: existing.status };
+                }
+              }
+              return newOrder;
+            });
           });
         })
         .catch(console.error);
@@ -200,6 +209,7 @@ export default function PedidosKanban() {
       });
 
       socket.on('order_status_updated', (dbOrder: any) => {
+        updatingOrdersRef.current.delete(dbOrder.id);
         setOrders(prev => prev.map(o => 
           o.id === dbOrder.id 
             ? { ...o, status: mapStatusToFrontend(dbOrder.status) }
@@ -234,6 +244,7 @@ export default function PedidosKanban() {
     e.preventDefault();
     const orderId = e.dataTransfer.getData('orderId');
     if (orderId) {
+      updatingOrdersRef.current.add(orderId);
       // Otimisticamente atualiza a UI
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
       setDraggedOrderId(null);
@@ -246,6 +257,8 @@ export default function PedidosKanban() {
         });
       } catch (error) {
         console.error("Erro ao atualizar o status:", error);
+      } finally {
+        setTimeout(() => { updatingOrdersRef.current.delete(orderId) }, 3000);
       }
     }
   };
@@ -256,6 +269,7 @@ export default function PedidosKanban() {
     if (currentIndex < statusFlow.length - 1 && currentIndex !== -1) {
       const nextStatus = statusFlow[currentIndex + 1];
       
+      updatingOrdersRef.current.add(orderId);
       // Otimisticamente atualiza a UI
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: nextStatus } : o));
 
@@ -267,6 +281,8 @@ export default function PedidosKanban() {
         });
       } catch (error) {
         console.error("Erro ao atualizar o status:", error);
+      } finally {
+        setTimeout(() => { updatingOrdersRef.current.delete(orderId) }, 3000);
       }
     }
   };
@@ -277,6 +293,7 @@ export default function PedidosKanban() {
     const orderId = orderToCancel;
     setOrderToCancel(null);
 
+    updatingOrdersRef.current.add(orderId);
     // Otimisticamente atualiza a UI
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'Cancelado' } : o));
 
@@ -288,6 +305,8 @@ export default function PedidosKanban() {
       });
     } catch (error) {
       console.error("Erro ao cancelar o pedido:", error);
+    } finally {
+      setTimeout(() => { updatingOrdersRef.current.delete(orderId) }, 3000);
     }
   };
 
