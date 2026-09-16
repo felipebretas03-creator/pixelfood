@@ -62,7 +62,9 @@ export default function PedidosKanban() {
   const [storeName, setStoreName] = useState('Restaurante');
   const autoPrintRef = useRef(false);
   const storeNameRef = useRef('Restaurante');
-  const updatingOrdersRef = useRef<Set<string>>(new Set());
+  const shieldEndTimes = useRef<Map<string, number>>(new Map());
+  const initialLoadRef = useRef(true);
+  const prevOrdersRef = useRef<Order[]>([]);
 
   // Mantém as refs sincronizadas para o socket acessar o valor atualizado
   useEffect(() => {
@@ -88,6 +90,46 @@ export default function PedidosKanban() {
       apiFetch('/api/orders')
         .then(res => res.json())
         .then((data: any[]) => {
+          const prevCache = prevOrdersRef.current;
+          const newOrdersData = data.filter(dbOrder => !prevCache.some(o => o.id === dbOrder.id));
+          
+          if (!initialLoadRef.current && newOrdersData.length > 0) {
+            try {
+              const w = window as any;
+              if (!w.__audioInstance) {
+                w.__audioInstance = new Audio('/notification.mp3');
+                w.__audioInstance.volume = 1.0;
+              }
+              w.__audioInstance.currentTime = 0;
+              w.__audioInstance.play().catch(() => {});
+            } catch(e) {}
+            
+            if (autoPrintRef.current) {
+              newOrdersData.forEach(dbOrder => {
+                const printData = {
+                  orderNumber: dbOrder.orderNumber,
+                  customerName: dbOrder.customerNameSnapshot || 'Cliente',
+                  phone: dbOrder.customerPhoneSnapshot || dbOrder.customer?.phone,
+                  address: dbOrder.addressSnapshot || undefined,
+                  items: dbOrder.items.map((i: any) => ({
+                    name: i.name,
+                    quantity: i.quantity,
+                    price: i.price,
+                    options: i.options && i.options.length > 0 ? i.options.map((opt: any) => `${opt.quantity}x ${opt.name}`).join(', ') : undefined,
+                    observation: i.observation
+                  })),
+                  total: dbOrder.totalCents / 100,
+                  paymentMethod: dbOrder.paymentMethod === 'PIX_APP' || dbOrder.paymentMethod === 'MERCADO_PAGO_PIX' ? 'PIX' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.changeForCents > 0 ? `Dinheiro (Troco p/ R$ ${(dbOrder.changeForCents/100).toFixed(2)})` : 'Dinheiro') : 'Cartão',
+                  createdAt: new Date(dbOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                  storeName: storeNameRef.current
+                };
+                printOrderReceipt(printData);
+              });
+            }
+          }
+          initialLoadRef.current = false;
+
+
           const formatted = data.map(dbOrder => ({
             id: dbOrder.id,
             orderNumber: `#${dbOrder.orderNumber}`,
@@ -108,11 +150,10 @@ export default function PedidosKanban() {
             time: new Date(dbOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }));
           
-          setOrders(prev => {
-            // Se houver novos pedidos que não estão em prev, podemos disparar alerta sonoro (opcional)
-            // Mantemos a estabilidade dos cards durante a atualização otimista
-            return formatted.map(newOrder => {
-              if (updatingOrdersRef.current.has(newOrder.id)) {
+                    setOrders(prev => {
+            const result = formatted.map(newOrder => {
+              const shieldEnd = shieldEndTimes.current.get(newOrder.id) || 0;
+              if (Date.now() < shieldEnd) {
                 const existing = prev.find(o => o.id === newOrder.id);
                 if (existing) {
                   return { ...newOrder, status: existing.status };
@@ -120,6 +161,8 @@ export default function PedidosKanban() {
               }
               return newOrder;
             });
+            prevOrdersRef.current = result;
+            return result;
           });
         })
         .catch(console.error);
@@ -209,7 +252,7 @@ export default function PedidosKanban() {
       });
 
       socket.on('order_status_updated', (dbOrder: any) => {
-        updatingOrdersRef.current.delete(dbOrder.id);
+        shieldEndTimes.current.delete(dbOrder.id);
         setOrders(prev => prev.map(o => 
           o.id === dbOrder.id 
             ? { ...o, status: mapStatusToFrontend(dbOrder.status) }
@@ -244,7 +287,7 @@ export default function PedidosKanban() {
     e.preventDefault();
     const orderId = e.dataTransfer.getData('orderId');
     if (orderId) {
-      updatingOrdersRef.current.add(orderId);
+      shieldEndTimes.current.set(orderId, Date.now() + 5000);
       // Otimisticamente atualiza a UI
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
       setDraggedOrderId(null);
@@ -257,9 +300,7 @@ export default function PedidosKanban() {
         });
       } catch (error) {
         console.error("Erro ao atualizar o status:", error);
-      } finally {
-        setTimeout(() => { updatingOrdersRef.current.delete(orderId) }, 3000);
-      }
+      } 
     }
   };
 
@@ -269,7 +310,7 @@ export default function PedidosKanban() {
     if (currentIndex < statusFlow.length - 1 && currentIndex !== -1) {
       const nextStatus = statusFlow[currentIndex + 1];
       
-      updatingOrdersRef.current.add(orderId);
+      shieldEndTimes.current.set(orderId, Date.now() + 5000);
       // Otimisticamente atualiza a UI
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: nextStatus } : o));
 
@@ -281,9 +322,7 @@ export default function PedidosKanban() {
         });
       } catch (error) {
         console.error("Erro ao atualizar o status:", error);
-      } finally {
-        setTimeout(() => { updatingOrdersRef.current.delete(orderId) }, 3000);
-      }
+      } 
     }
   };
 
@@ -293,7 +332,7 @@ export default function PedidosKanban() {
     const orderId = orderToCancel;
     setOrderToCancel(null);
 
-    updatingOrdersRef.current.add(orderId);
+    shieldEndTimes.current.set(orderId, Date.now() + 5000);
     // Otimisticamente atualiza a UI
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'Cancelado' } : o));
 
@@ -305,9 +344,7 @@ export default function PedidosKanban() {
       });
     } catch (error) {
       console.error("Erro ao cancelar o pedido:", error);
-    } finally {
-      setTimeout(() => { updatingOrdersRef.current.delete(orderId) }, 3000);
-    }
+    } 
   };
 
   const handleManualPrint = (order: Order) => {
