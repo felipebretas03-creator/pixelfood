@@ -11,7 +11,7 @@ const mapProduct = (p: any) => ({
     options: g.options.map((o: any) => ({
       id: o.id,
       name: o.name,
-      price: o.priceCents / 100
+      price: o.priceDeltaCents / 100
     }))
   }))
 });
