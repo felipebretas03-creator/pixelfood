@@ -101,7 +101,7 @@ export default function PedidosKanban() {
             }),
             contact: dbOrder.customerPhoneSnapshot || dbOrder.customer?.phone || 'Sem contato',
             address: dbOrder.addressSnapshot || 'Retirada no Local',
-            paymentMethod: dbOrder.paymentMethod === 'PIX_APP' || dbOrder.paymentMethod === 'MERCADO_PAGO_PIX' ? 'Pix' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.changeForCents > 0 ? `Dinheiro (Troco para R$ ${((dbOrder.totalCents + dbOrder.changeForCents)/100).toFixed(2)})` : 'Dinheiro') : 'Cartão',
+            paymentMethod: dbOrder.paymentMethod === 'PIX_APP' || dbOrder.paymentMethod === 'MERCADO_PAGO_PIX' ? 'Pix' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.changeForCents > 0 ? `Dinheiro (Troco para R$ ${(dbOrder.changeForCents/100).toFixed(2)})` : 'Dinheiro') : 'Cartão',
             total: dbOrder.totalCents / 100,
             status: mapStatusToFrontend(dbOrder.status),
             time: new Date(dbOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -150,7 +150,7 @@ export default function PedidosKanban() {
           }),
           contact: dbOrder.customerPhoneSnapshot || dbOrder.customer?.phone || 'Sem contato',
           address: dbOrder.addressSnapshot || 'Retirada no Local',
-          paymentMethod: dbOrder.paymentMethod === 'PIX_APP' || dbOrder.paymentMethod === 'MERCADO_PAGO_PIX' ? 'Pix' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.changeForCents > 0 ? `Dinheiro (Troco para R$ ${((dbOrder.totalCents + dbOrder.changeForCents)/100).toFixed(2)})` : 'Dinheiro') : 'Cartão',
+          paymentMethod: dbOrder.paymentMethod === 'PIX_APP' || dbOrder.paymentMethod === 'MERCADO_PAGO_PIX' ? 'Pix' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.changeForCents > 0 ? `Dinheiro (Troco para R$ ${(dbOrder.changeForCents/100).toFixed(2)})` : 'Dinheiro') : 'Cartão',
           total: dbOrder.totalCents / 100,
           status: mapStatusToFrontend(dbOrder.status),
           time: new Date(dbOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -191,7 +191,7 @@ export default function PedidosKanban() {
               observation: i.observation
             })),
             total: dbOrder.totalCents / 100,
-            paymentMethod: dbOrder.paymentMethod === 'PIX_APP' || dbOrder.paymentMethod === 'MERCADO_PAGO_PIX' ? 'PIX' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.changeForCents > 0 ? `Dinheiro (Troco p/ R$ ${((dbOrder.totalCents + dbOrder.changeForCents)/100).toFixed(2)})` : 'Dinheiro') : 'Cartão',
+            paymentMethod: dbOrder.paymentMethod === 'PIX_APP' || dbOrder.paymentMethod === 'MERCADO_PAGO_PIX' ? 'PIX' : dbOrder.paymentMethod === 'CASH' ? (dbOrder.changeForCents > 0 ? `Dinheiro (Troco p/ R$ ${(dbOrder.changeForCents/100).toFixed(2)})` : 'Dinheiro') : 'Cartão',
             createdAt: new Date(dbOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             storeName: storeNameRef.current
           };
