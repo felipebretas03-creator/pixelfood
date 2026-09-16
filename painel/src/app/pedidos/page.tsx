@@ -97,7 +97,7 @@ export default function PedidosKanban() {
             try {
               const w = window as any;
               if (!w.__audioInstance) {
-                w.__audioInstance = new Audio('/notification.mp3');
+                w.__audioInstance = new Audio('/cash-register.mp3');
                 w.__audioInstance.volume = 1.0;
               }
               w.__audioInstance.currentTime = 0;
@@ -217,7 +217,7 @@ export default function PedidosKanban() {
         try {
           const w = window as any;
           if (!w.__audioInstance) {
-            w.__audioInstance = new Audio('/notification.mp3');
+            w.__audioInstance = new Audio('/cash-register.mp3');
             w.__audioInstance.volume = 1.0;
           }
           w.__audioInstance.currentTime = 0;
