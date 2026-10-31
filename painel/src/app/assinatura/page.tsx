@@ -130,14 +130,38 @@ export default function AssinaturaPage() {
                 </div>
               </div>
 
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-black text-stone-900">
-                  R$ {(plan.priceCents / 100).toFixed(2).replace(".", ",")}
-                </span>
-                <span className="text-stone-500 font-medium">
-                  /{plan.billingCycle === "YEARLY" ? "ano" : "mês"}
-                </span>
-              </div>
+              {plan.hasDiscount ? (
+                <div className="flex flex-col mb-6">
+                  <span className="text-sm line-through text-stone-400 font-bold">
+                    R$ {(plan.originalPriceCents / 100).toFixed(2).replace(".", ",")}
+                  </span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-black text-emerald-600">
+                      R$ {(plan.priceCents / 100).toFixed(2).replace(".", ",")}
+                    </span>
+                    <span className="text-stone-500 font-medium">
+                      /{plan.billingCycle === "YEARLY" ? "ano" : "mês"}
+                    </span>
+                  </div>
+                  <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200 w-max">
+                    <span>🎁 Desconto Especial Concedido</span>
+                  </div>
+                  {plan.discountReason && (
+                    <span className="text-xs text-stone-500 italic mt-1 font-medium">
+                      "{plan.discountReason}"
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-baseline gap-1 mb-6">
+                  <span className="text-4xl font-black text-stone-900">
+                    R$ {(plan.priceCents / 100).toFixed(2).replace(".", ",")}
+                  </span>
+                  <span className="text-stone-500 font-medium">
+                    /{plan.billingCycle === "YEARLY" ? "ano" : "mês"}
+                  </span>
+                </div>
+              )}
 
               {plan.features && (
                 <ul className="flex flex-col gap-3">

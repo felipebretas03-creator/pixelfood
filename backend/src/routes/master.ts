@@ -489,6 +489,115 @@ router.post('/tenants/:id/revoke-lifetime', async (req, res) => {
   }
 });
 
+// 10.1 APLICAR DESCONTO OU PREÇO CUSTOMIZADO NA MENSALIDADE
+router.post('/tenants/:id/discount', async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    const { customPrice, discountAmount, discountType, reason } = req.body;
+    
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      include: { subscriptions: { include: { plan: true } } }
+    });
+    if (!tenant) return res.status(404).json({ error: 'Loja não encontrada' });
+
+    let customPriceCents: number | null = null;
+    let subscriptionDiscountCents: number = 0;
+
+    if (discountType === 'FIXED_PRICE' && customPrice !== undefined && customPrice !== null && customPrice !== '') {
+      customPriceCents = Math.round(Number(customPrice) * 100);
+    } else if (discountType === 'DISCOUNT_AMOUNT' && discountAmount !== undefined && discountAmount !== null && discountAmount !== '') {
+      subscriptionDiscountCents = Math.round(Number(discountAmount) * 100);
+    } else {
+      return res.status(400).json({ error: 'Informe um valor válido de desconto ou preço fixo.' });
+    }
+
+    const updatedTenant = await prisma.tenant.update({
+      where: { id: tenantId },
+      data: {
+        customPriceCents,
+        subscriptionDiscountCents,
+        discountReason: reason || null
+      }
+    });
+
+    // Se tiver assinatura ativa no Asaas, atualiza o valor da recorrência
+    const activeSub = tenant.subscriptions[0];
+    if (activeSub?.providerSubscriptionId && !activeSub.providerSubscriptionId.startsWith('sub_simulated')) {
+      try {
+        const basePriceCents = activeSub.plan?.priceCents || 9900;
+        let newPriceCents = basePriceCents;
+        if (customPriceCents !== null) {
+          newPriceCents = customPriceCents;
+        } else if (subscriptionDiscountCents > 0) {
+          newPriceCents = Math.max(0, basePriceCents - subscriptionDiscountCents);
+        }
+
+        await asaasApi.put(`/subscriptions/${activeSub.providerSubscriptionId}`, {
+          value: newPriceCents / 100
+        });
+        console.log(`[Master] Assinatura Asaas ${activeSub.providerSubscriptionId} atualizada para R$ ${newPriceCents / 100}`);
+      } catch (asaasErr: any) {
+        console.warn('[Master] Aviso: Falha ao atualizar valor diretamente no Asaas:', asaasErr.response?.data || asaasErr.message);
+      }
+    }
+
+    const admin = (req as any).user;
+    await logAudit('SUBSCRIPTION_DISCOUNT_APPLIED', admin.id, tenantId, {
+      customPriceCents,
+      subscriptionDiscountCents,
+      reason
+    });
+
+    res.json({ success: true, tenant: updatedTenant });
+  } catch (error: any) {
+    console.error('Erro ao aplicar desconto:', error);
+    res.status(500).json({ error: 'Erro ao aplicar desconto na assinatura' });
+  }
+});
+
+// 10.2 REMOVER DESCONTO DA MENSALIDADE
+router.delete('/tenants/:id/discount', async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      include: { subscriptions: { include: { plan: true } } }
+    });
+    if (!tenant) return res.status(404).json({ error: 'Loja não encontrada' });
+
+    const updatedTenant = await prisma.tenant.update({
+      where: { id: tenantId },
+      data: {
+        customPriceCents: null,
+        subscriptionDiscountCents: 0,
+        discountReason: null
+      }
+    });
+
+    // Restaura o preço original do plano no Asaas se houver assinatura ativa
+    const activeSub = tenant.subscriptions[0];
+    if (activeSub?.providerSubscriptionId && !activeSub.providerSubscriptionId.startsWith('sub_simulated') && activeSub.plan) {
+      try {
+        await asaasApi.put(`/subscriptions/${activeSub.providerSubscriptionId}`, {
+          value: activeSub.plan.priceCents / 100
+        });
+        console.log(`[Master] Assinatura Asaas restaurada para R$ ${activeSub.plan.priceCents / 100}`);
+      } catch (asaasErr: any) {
+        console.warn('[Master] Aviso ao restaurar valor no Asaas:', asaasErr.response?.data || asaasErr.message);
+      }
+    }
+
+    const admin = (req as any).user;
+    await logAudit('SUBSCRIPTION_DISCOUNT_REMOVED', admin.id, tenantId, {});
+
+    res.json({ success: true, tenant: updatedTenant });
+  } catch (error: any) {
+    console.error('Erro ao remover desconto:', error);
+    res.status(500).json({ error: 'Erro ao remover desconto da assinatura' });
+  }
+});
+
 // 11. LISTAR PLANOS
 router.get('/plans', async (req, res) => {
   try {

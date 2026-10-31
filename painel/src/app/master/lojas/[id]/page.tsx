@@ -18,7 +18,11 @@ import {
   Shield,
   Star,
   X,
-  AlertCircle
+  AlertCircle,
+  Tag,
+  Edit2,
+  Trash2,
+  Gift
 } from "lucide-react";
 import Link from "next/link";
 
@@ -28,7 +32,9 @@ const formatActionName = (action: string) => {
     'IMPERSONATION_STARTED': 'Acesso Administrativo',
     'STORE_SUSPENDED': 'Loja Suspensa',
     'STORE_REACTIVATED': 'Loja Reativada',
-    'STORE_CANCELED': 'Assinatura Cancelada'
+    'STORE_CANCELED': 'Assinatura Cancelada',
+    'SUBSCRIPTION_DISCOUNT_APPLIED': 'Desconto na Mensalidade Aplicado',
+    'SUBSCRIPTION_DISCOUNT_REMOVED': 'Desconto na Mensalidade Removido'
   };
   return map[action] || action;
 };
@@ -80,6 +86,92 @@ export default function LojaDetalhes() {
   // Edit Tenant State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', email: '', cpfCnpj: '', phone: '' });
+  
+  // Desconto Personalizado na Mensalidade
+  const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+  const [discountType, setDiscountType] = useState<'FIXED_PRICE' | 'DISCOUNT_AMOUNT'>('FIXED_PRICE');
+  const [discountValue, setDiscountValue] = useState('');
+  const [discountReason, setDiscountReason] = useState('');
+
+  const openDiscountModal = () => {
+    if (tenant?.customPriceCents) {
+      setDiscountType('FIXED_PRICE');
+      setDiscountValue((tenant.customPriceCents / 100).toFixed(2));
+    } else if (tenant?.subscriptionDiscountCents && tenant.subscriptionDiscountCents > 0) {
+      setDiscountType('DISCOUNT_AMOUNT');
+      setDiscountValue((tenant.subscriptionDiscountCents / 100).toFixed(2));
+    } else {
+      setDiscountType('FIXED_PRICE');
+      setDiscountValue('');
+    }
+    setDiscountReason(tenant?.discountReason || '');
+    setIsDiscountModalOpen(true);
+  };
+
+  const handleSaveDiscount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!discountValue || Number(discountValue) <= 0) {
+      openAlertModal("Atenção", "Por favor, insira um valor válido maior que zero.", true);
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const body = {
+        discountType,
+        customPrice: discountType === 'FIXED_PRICE' ? parseFloat(discountValue) : null,
+        discountAmount: discountType === 'DISCOUNT_AMOUNT' ? parseFloat(discountValue) : null,
+        reason: discountReason.trim() || undefined
+      };
+
+      const res = await apiFetch(`/api/master/tenants/${id}/discount`, {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        setIsDiscountModalOpen(false);
+        fetchTenant();
+        openAlertModal("Sucesso!", "Desconto na mensalidade aplicado com sucesso!");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        openAlertModal("Ops!", err.error || "Erro ao aplicar desconto.", true);
+      }
+    } catch (err: any) {
+      openAlertModal("Ops!", err.message || "Erro de conexão.", true);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRemoveDiscount = () => {
+    openConfirmModal(
+      'Remover Desconto',
+      'Deseja remover o desconto desta loja? A mensalidade voltará ao valor padrão do plano.',
+      'Remover Desconto',
+      async () => {
+        closeConfirmModal();
+        setActionLoading(true);
+        try {
+          const res = await apiFetch(`/api/master/tenants/${id}/discount`, {
+            method: 'DELETE'
+          });
+          if (res.ok) {
+            fetchTenant();
+            openAlertModal("Sucesso!", "Desconto removido. O restaurante voltará ao valor padrão.");
+          } else {
+            const err = await res.json().catch(() => ({}));
+            openAlertModal("Ops!", err.error || "Erro ao remover desconto.", true);
+          }
+        } catch (err: any) {
+          openAlertModal("Ops!", err.message || "Erro de conexão.", true);
+        } finally {
+          setActionLoading(false);
+        }
+      },
+      true
+    );
+  };
   
   // Custom Modal State
   const [modalState, setModalState] = useState<{
@@ -626,6 +718,99 @@ export default function LojaDetalhes() {
                 </div>
               </div>
             )}
+
+            {/* ÁREA DE DESCONTO PERSONALIZADO NA MENSALIDADE */}
+            <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                    <Tag className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-lg text-stone-900">Desconto Personalizado na Mensalidade</h3>
+                      {(tenant?.customPriceCents || (tenant?.subscriptionDiscountCents && tenant?.subscriptionDiscountCents > 0)) ? (
+                        <span className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-emerald-100 text-emerald-800">
+                          Ativo
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-stone-100 text-stone-600">
+                          Opcional
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-stone-500 font-medium">
+                      Defina um preço fixo ou conceda um desconto exclusivo para este restaurante (apenas se você quiser).
+                    </p>
+                  </div>
+                </div>
+
+                {(tenant?.customPriceCents || (tenant?.subscriptionDiscountCents && tenant?.subscriptionDiscountCents > 0)) ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={openDiscountModal}
+                      className="px-3.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" /> Editar
+                    </button>
+                    <button
+                      onClick={handleRemoveDiscount}
+                      className="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Remover
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={openDiscountModal}
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-2 self-start sm:self-auto"
+                  >
+                    <Tag className="w-4 h-4" /> Conceder Desconto
+                  </button>
+                )}
+              </div>
+
+              {(tenant?.customPriceCents || (tenant?.subscriptionDiscountCents && tenant?.subscriptionDiscountCents > 0)) ? (
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-emerald-50/70 border border-emerald-100 rounded-xl">
+                    <span className="text-xs text-emerald-700 font-bold uppercase tracking-wider block mb-1">
+                      {tenant.customPriceCents ? "Preço Especial da Mensalidade" : "Desconto Concedido"}
+                    </span>
+                    <span className="text-2xl font-black text-emerald-800">
+                      {tenant.customPriceCents 
+                        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(tenant.customPriceCents / 100) + ' /mês'
+                        : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(tenant.subscriptionDiscountCents / 100) + ' OFF /mês'
+                      }
+                    </span>
+                  </div>
+
+                  <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl">
+                    <span className="text-xs text-stone-500 font-bold uppercase tracking-wider block mb-1">
+                      Status da Cobrança
+                    </span>
+                    <span className="text-sm font-bold text-stone-800 flex items-center gap-1.5 mt-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                      Ativo no Checkout e no Asaas
+                    </span>
+                  </div>
+
+                  <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl">
+                    <span className="text-xs text-stone-500 font-bold uppercase tracking-wider block mb-1">
+                      Motivo / Observação Interna
+                    </span>
+                    <span className="text-sm text-stone-700 font-medium italic block mt-1">
+                      {tenant.discountReason ? `"${tenant.discountReason}"` : "Nenhum motivo informado"}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 p-4 bg-stone-50 border border-dashed border-stone-200 rounded-xl text-center">
+                  <p className="text-sm text-stone-500 font-medium">
+                    Nenhum desconto personalizado ativo para esta loja. O valor cobrado é o preço padrão cadastrado nos Planos.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -861,6 +1046,113 @@ export default function LojaDetalhes() {
                   className="px-5 py-2.5 rounded-xl font-bold text-white bg-brand-600 hover:bg-brand-700 transition-colors disabled:opacity-50"
                 >
                   {actionLoading ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CONCEDER / EDITAR DESCONTO NA MENSALIDADE */}
+      {isDiscountModalOpen && (
+        <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-100 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-100">
+              <div className="flex items-center gap-2 text-stone-900 font-bold text-lg">
+                <Tag className="w-5 h-5 text-amber-500" />
+                <span>Desconto na Mensalidade</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDiscountModalOpen(false)}
+                className="w-8 h-8 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveDiscount} className="mt-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
+                  Tipo de Condição
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDiscountType('FIXED_PRICE')}
+                    className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all ${
+                      discountType === 'FIXED_PRICE'
+                        ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                        : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+                    }`}
+                  >
+                    Preço Fixo (R$)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDiscountType('DISCOUNT_AMOUNT')}
+                    className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all ${
+                      discountType === 'DISCOUNT_AMOUNT'
+                        ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                        : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+                    }`}
+                  >
+                    Valor de Desconto (R$)
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                  {discountType === 'FIXED_PRICE' ? 'Valor Final da Mensalidade (R$)' : 'Valor do Desconto Mensal (R$)'}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-3 text-stone-400 font-bold text-sm">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    value={discountValue}
+                    onChange={(e) => setDiscountValue(e.target.value)}
+                    placeholder={discountType === 'FIXED_PRICE' ? "49.90" : "30.00"}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl py-2.5 pl-10 pr-4 text-stone-900 font-bold text-base focus:outline-none focus:border-amber-500 focus:bg-white transition-all"
+                  />
+                </div>
+                <p className="text-xs text-stone-400 mt-1 font-medium">
+                  {discountType === 'FIXED_PRICE' 
+                    ? 'O lojista pagará exatamente este valor todo mês no Asaas e no checkout.' 
+                    : 'Este valor será subtraído da mensalidade padrão do plano escolhido.'}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                  Motivo / Observação Interna (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={discountReason}
+                  onChange={(e) => setDiscountReason(e.target.value)}
+                  placeholder="Ex: Parceria inicial, amigo de infância, negociação anual..."
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl py-2.5 px-3.5 text-stone-900 font-medium text-sm focus:outline-none focus:border-amber-500 focus:bg-white transition-all"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setIsDiscountModalOpen(false)}
+                  className="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold rounded-xl text-sm transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-amber-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar Desconto"}
                 </button>
               </div>
             </form>

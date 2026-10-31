@@ -364,7 +364,36 @@ export const updateLoyalty = async (req: Request, res: Response) => {
 export const getPlans = async (req: Request, res: Response) => {
   try {
     const plans = await prisma.plan.findMany({ where: { isActive: true }, orderBy: { priceCents: 'asc' } });
-    res.json(plans);
+    
+    // Se a requisição veio de um lojista autenticado, verifica se há desconto personalizado concedido pelo Master
+    const tenant = req.tenantId ? await prisma.tenant.findUnique({
+      where: { id: req.tenantId },
+      select: { customPriceCents: true, subscriptionDiscountCents: true, discountReason: true }
+    }) : null;
+
+    const formattedPlans = plans.map(p => {
+      let finalPriceCents = p.priceCents;
+      let hasDiscount = false;
+      const originalPriceCents = p.priceCents;
+
+      if (tenant?.customPriceCents && tenant.customPriceCents > 0) {
+        finalPriceCents = tenant.customPriceCents;
+        hasDiscount = true;
+      } else if (tenant?.subscriptionDiscountCents && tenant.subscriptionDiscountCents > 0) {
+        finalPriceCents = Math.max(0, p.priceCents - tenant.subscriptionDiscountCents);
+        hasDiscount = true;
+      }
+
+      return {
+        ...p,
+        originalPriceCents,
+        priceCents: finalPriceCents,
+        hasDiscount,
+        discountReason: tenant?.discountReason || null
+      };
+    });
+
+    res.json(formattedPlans);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar planos' });
   }
@@ -424,18 +453,25 @@ export const getSubscriptionCheckout = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Plano não encontrado ou erro ao identificar cliente no Asaas.' });
     }
     
+    // Aplica desconto ou preço customizado concedido pelo Master
+    let effectivePriceCents = plan.priceCents;
+    if (tenant.customPriceCents && tenant.customPriceCents > 0) {
+      effectivePriceCents = tenant.customPriceCents;
+    } else if (tenant.subscriptionDiscountCents && tenant.subscriptionDiscountCents > 0) {
+      effectivePriceCents = Math.max(0, plan.priceCents - tenant.subscriptionDiscountCents);
+    }
+
     // Cria nova assinatura no Asaas
     const today = new Date();
     today.setDate(today.getDate() + 7); // Vence em 7 dias (período de teste)
 
-    
     const subRes = await asaasClient.post('/subscriptions', {
       customer: customerId,
       billingType: 'UNDEFINED',
-      value: plan.priceCents / 100,
+      value: effectivePriceCents / 100,
       nextDueDate: today.toISOString().split('T')[0],
       cycle: plan.billingCycle === 'YEARLY' ? 'YEARLY' : 'MONTHLY',
-      description: `Assinatura Pixeleats - ${plan.name}`
+      description: `Assinatura Pixeleats - ${plan.name}${tenant.customPriceCents || (tenant.subscriptionDiscountCents && tenant.subscriptionDiscountCents > 0) ? ' (Desconto Master)' : ''}`
     });
     
     // Com o teste grátis de 7 dias ativado, não precisamos redirecionar o usuário para o Asaas agora.
