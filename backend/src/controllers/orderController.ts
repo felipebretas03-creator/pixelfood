@@ -7,8 +7,12 @@ import { createPixPayment, createCardPreference } from '../services/mercadopagoS
 
 
 export const getOrdersOwner = async (req: Request, res: Response) => {
+  // Retorna apenas pedidos confirmados para a cozinha (ignora pendentes de pagamento Pix/Cartão)
   const orders = await prisma.order.findMany({
-    where: { tenantId: req.tenantId! },
+    where: { 
+      tenantId: req.tenantId!,
+      status: { notIn: ['PAYMENT_PENDING', 'AWAITING_PAYMENT'] }
+    },
     include: { items: { include: { options: true } }, customer: true },
     orderBy: { createdAt: 'desc' }
   });

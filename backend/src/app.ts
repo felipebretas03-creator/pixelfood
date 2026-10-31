@@ -15,15 +15,17 @@ app.use(helmet({
 }));
 
 // Origens permitidas
-const allowedOrigins = [
+const defaultOrigins = [
   'https://pixelfood-frontend.vercel.app',
   'https://painel-pixelfood.vercel.app',
   'https://frontend-pixelfood.vercel.app',
-  'https://painel-pixelfood.vercel.app',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:3002',
 ];
+
+const customOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : [];
+const allowedOrigins = [...defaultOrigins, ...customOrigins];
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -31,7 +33,10 @@ app.use(cors({
     if (!origin) return callback(null, true);
     if (
       allowedOrigins.includes(origin) ||
-      origin.endsWith('.vercel.app') // Permite preview deployments da Vercel
+      origin.endsWith('.vercel.app') || // Permite preview e produção da Vercel
+      origin.endsWith('.pixeleats.com.br') ||
+      origin.endsWith('.pixelfood.com.br') ||
+      origin.startsWith('http://localhost')
     ) {
       return callback(null, true);
     }

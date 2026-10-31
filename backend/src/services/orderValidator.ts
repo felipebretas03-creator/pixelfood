@@ -78,7 +78,8 @@ export async function calculateOrderTotal(
     });
   }
 
-  const totalCents = subtotalCents + deliveryFeeCents - discountAmountCents;
+  // Garante que o total nunca seja negativo mesmo com cupons ou descontos altos
+  const totalCents = Math.max(0, subtotalCents + deliveryFeeCents - discountAmountCents);
 
   return {
     subtotalCents,

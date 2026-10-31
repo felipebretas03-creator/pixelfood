@@ -21,13 +21,17 @@ interface Order {
 
 const mapStatusToFrontend = (dbStatus: string): OrderStatus => {
   switch (dbStatus) {
-    case 'PENDING': return 'Novo';
+    case 'PENDING':
+    case 'NEW':
+      return 'Novo';
     case 'PREPARING': return 'Preparando';
     case 'READY': return 'Pronto';
     case 'IN_TRANSIT': return 'Em Rota';
     case 'DELIVERED': return 'Finalizado';
-    case 'CANCELLED': return 'Cancelado';
-    case 'REJECTED': return 'Cancelado';
+    case 'CANCELLED':
+    case 'CANCELED':
+    case 'REJECTED':
+      return 'Cancelado';
     default: return 'Novo';
   }
 };
@@ -90,8 +94,12 @@ export default function PedidosKanban() {
       apiFetch('/api/orders')
         .then(res => res.json())
         .then((data: any[]) => {
+          // Filtra apenas pedidos confirmados para a cozinha (ignora pendentes de pagamento Pix/Cartão)
+          const validOrders = (Array.isArray(data) ? data : []).filter(dbOrder => 
+            dbOrder.status !== 'PAYMENT_PENDING' && dbOrder.status !== 'AWAITING_PAYMENT'
+          );
           const prevCache = prevOrdersRef.current;
-          const newOrdersData = data.filter(dbOrder => !prevCache.some(o => o.id === dbOrder.id));
+          const newOrdersData = validOrders.filter(dbOrder => !prevCache.some(o => o.id === dbOrder.id));
           
           if (!initialLoadRef.current && newOrdersData.length > 0) {
             try {
@@ -129,8 +137,7 @@ export default function PedidosKanban() {
           }
           initialLoadRef.current = false;
 
-
-          const formatted = data.map(dbOrder => ({
+          const formatted = validOrders.map(dbOrder => ({
             id: dbOrder.id,
             orderNumber: `#${dbOrder.orderNumber}`,
             customer: dbOrder.customerNameSnapshot || 'Cliente',

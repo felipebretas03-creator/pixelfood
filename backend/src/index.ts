@@ -3,8 +3,11 @@ import { Server } from 'socket.io';
 import app from './app';
 import dotenv from 'dotenv';
 import { startEmailWorker } from './cron/emailWorker';
+import { startTrialWorker } from './cron/trialWorker';
 
 dotenv.config();
+
+const customOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : [];
 
 const server = http.createServer(app);
 export const io = new Server(server, {
@@ -12,9 +15,11 @@ export const io = new Server(server, {
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
       if (
-        !origin ||
         origin.endsWith('.vercel.app') ||
-        origin.startsWith('http://localhost')
+        origin.endsWith('.pixeleats.com.br') ||
+        origin.endsWith('.pixelfood.com.br') ||
+        origin.startsWith('http://localhost') ||
+        customOrigins.includes(origin)
       ) {
         return callback(null, true);
       }
@@ -45,4 +50,5 @@ server.listen(PORT, () => {
   
   // Start background workers
   startEmailWorker();
+  startTrialWorker();
 });

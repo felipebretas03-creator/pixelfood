@@ -1,58 +1,157 @@
-# Runbook de Produção (PixelFood MVP)
+# Runbook de Produção (PixelFood / PixelEats SaaS)
 
-Este runbook contém os procedimentos padrões de operação, deploy e troubleshooting para a aplicação PixelFood.
+Este documento contém os procedimentos operacionais para deploy em produção, configuração de variáveis de ambiente, webhooks e troubleshooting.
 
-## 1. Variáveis de Ambiente Críticas
-Certifique-se de que o ambiente de produção possua todas estas variáveis devidamente configuradas:
+---
+
+## 1. Arquitetura de Hospedagem
+
+```
+                      +-----------------------------+
+                      |   Cloudflare / DNS Geral    |
+                      +--------------+--------------+
+                                     |
+         +---------------------------+---------------------------+
+         |                                                       |
+         v                                                       v
++-----------------------+                             +--------------------+
+|  Vercel (Frontends)   |                             | Railway / Render   |
++-----------------------+                             +--------------------+
+| - site-pixeleats (LP) |                             | - Backend Express  |
+| - painel (Lojistas)   |                             | - Socket.IO        |
+| - frontend (Cardápios)|                             | - Background Cron  |
++-----------------------+                             +---------+----------+
+                                                                |
+                                             +------------------+------------------+
+                                             |                  |                  |
+                                             v                  v                  v
+                                        +---------+        +---------+        +---------+
+                                        |Supabase |        |  Asaas  |        | Resend  |
+                                        |(Postgres|        |(SaaS Sub|        |(Emails) |
+                                        +---------+        +---------+        +---------+
+```
+
+> [!IMPORTANT]
+> O **Backend Express** precisa ser hospedado em um serviço com runtime contínuo (ex: **Railway**, **Render**, **Fly.io** ou **VPS**), pois utiliza conexões WebSocket persistentes (`Socket.IO`) e tarefas em segundo plano (`startTrialWorker` e `startEmailWorker`). Os três frontends devem ser hospedados na **Vercel**.
+
+---
+
+## 2. Variáveis de Ambiente de Produção
+
+### A. Backend (`backend/.env`)
+Configure no painel da Railway / Render:
 ```env
-# Backend (.env)
-DATABASE_URL="postgresql://user:pass@host:5432/pixelfood?schema=public"
-JWT_SECRET="seu-jwt-secret-super-seguro"
-PAYMENT_CREDENTIALS_ENCRYPTION_KEY="sua-chave-base64-de-32-bytes"
-ASAAS_ACCESS_TOKEN="seu-token-asaas"
-ASAAS_WEBHOOK_SECRET="seu-segredo-webhook-asaas"
+# Conexão com PostgreSQL / Supabase
+DATABASE_URL="postgresql://postgres:[SENHA]@[HOST]:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres:[SENHA]@[HOST]:5432/postgres"
 
-# Frontend e Painel (.env)
-NEXT_PUBLIC_API_URL="https://api.pixelfood.com.br"
+# Servidor e Segurança
+PORT=4000
+NODE_ENV="production"
+JWT_SECRET="gere-com: openssl rand -hex 32"
+PAYMENT_CREDENTIALS_ENCRYPTION_KEY="gere-com: openssl rand -base64 32"
+CORS_ORIGINS="https://pixeleats.com.br,https://painel.pixeleats.com.br"
+
+# Gateway de Assinaturas (Asaas)
+ASAAS_API_URL="https://api.asaas.com/v3"
+ASAAS_API_KEY="$aact_sua_chave_producao_asaas"
+ASAAS_WEBHOOK_SECRET="seu-token-autenticacao-webhook"
+
+# E-mails Transacionais (Resend)
+RESEND_API_KEY="re_sua_chave_producao"
+EMAIL_FROM="PixelEats <nao-responda@pixeleats.com.br>"
+
+# Feature Flags
+FEATURE_ONLINE_PAYMENTS_ENABLED="true"
 ```
 
-## 2. Processo de Deploy
-
-### Backend (Node.js/Express)
-Se estiver utilizando Vercel para Node puro (Serverless), o `vercel.json` deve apontar os rewrites.
-Se estiver utilizando Render / Railway:
-1. Conecte o repositório.
-2. Defina o Root Directory como `backend`.
-3. Defina o Build Command: `npm install && npx prisma generate && npm run build`
-4. Defina o Start Command: `npm run start`
-
-> [!WARNING]
-> Nunca se esqueça de rodar as migrations em produção utilizando `npx prisma migrate deploy` durante o build ou via console antes do deploy.
-
-### Frontend & Painel (Next.js na Vercel)
-1. Crie dois projetos na Vercel.
-2. Projeto 1 (Painel): Root Directory `painel`, Framework Preset `Next.js`.
-3. Projeto 2 (Frontend): Root Directory `frontend`, Framework Preset `Next.js`.
-4. Configure a variável `NEXT_PUBLIC_API_URL` em ambos.
-
-## 3. Troubleshooting
-
-### Erro P2002 (Prisma)
-- **Sintoma:** Log indicando `Prisma P2002 Unique constraint failed`.
-- **Causa:** O usuário tentou cadastrar um e-mail, telefone ou URL que já existe no banco de dados.
-- **Solução:** Trata-se de um erro esperado em uso normal que já está sendo tratado pelo `errorHandler.ts`. Nenhuma ação é necessária, mas caso ocorra em lote, investigue por ataques de spam.
-
-### Erro "Mercado Pago integration not configured"
-- **Sintoma:** Consumidores não conseguem gerar o Pix ou Cartão na tela de checkout. O pedido morre na cozinha e não notifica o lojista.
-- **Causa:** O Lojista configurou o botão para aceitar Pix/Cartão, mas o Access Token não foi preenchido corretamente ou a chave foi invalidada pelo Mercado Pago.
-- **Solução:** Instruir o lojista a acessar o Painel -> Configurações, preencher as credenciais novamente e salvar.
-
-## 4. Testes de Performance
-Periodicamente, teste a escalabilidade utilizando o script configurado de Artillery:
-```bash
-npx artillery run scripts/load-test.yml
+### B. Painel do Restaurante (`painel/.env`)
+Configure na Vercel (Projeto `painel`):
+```env
+NEXT_PUBLIC_API_URL="https://api.pixeleats.com.br"
+NEXT_PUBLIC_FRONTEND_URL="https://pixeleats.com.br"
 ```
-Monitore a latência P95. Se a latência ultrapassar 1000ms de forma consistente na Rota de Pedidos, considere escalar o banco de dados e as instâncias Node.js.
 
-## 5. Integração Contínua (CI)
-O repositório está configurado com **GitHub Actions** (`.github/workflows/main.yml`). Qualquer Pull Request ou Push na branch `main` executará os testes E2E do Playwright e construirá os três projetos. Só faça deploy para produção quando o Check da Action estiver "Verde".
+### C. Cardápio do Consumidor (`frontend/.env.local`)
+Configure na Vercel (Projeto `frontend`):
+```env
+NEXT_PUBLIC_API_URL="https://api.pixeleats.com.br"
+NEXT_PUBLIC_RESTAURANT_SLUG=""
+```
+
+### D. Landing Page Institucional (`site-pixeleats/.env`)
+Configure na Vercel (Projeto `site-pixeleats`):
+```env
+NEXT_PUBLIC_PAINEL_URL="https://painel.pixeleats.com.br"
+```
+
+---
+
+## 3. Procedimento de Deploy
+
+### Passo 1: Banco de Dados (Supabase / Postgres)
+1. Crie o projeto no Supabase.
+2. No seu terminal local ou na pipeline de CI:
+   ```bash
+   cd backend
+   npx prisma migrate deploy
+   ```
+
+### Passo 2: Backend (Railway ou Render)
+1. Conecte o repositório GitHub.
+2. Configure o **Root Directory** como `backend`.
+3. Build Command: `npm install && npm run build` (o script já executa `prisma generate && tsc`).
+4. Start Command: `npm run start`
+5. Adicione todas as variáveis de ambiente listadas na Seção 2.A.
+6. Configure o domínio personalizado (ex: `api.pixeleats.com.br`).
+
+### Passo 3: Frontends (Vercel)
+Crie três projetos separados na Vercel apontando para o mesmo repositório:
+
+1. **Projeto 1: Cardápio do Consumidor**
+   - Root Directory: `frontend`
+   - Framework Preset: `Next.js`
+   - Variáveis: `NEXT_PUBLIC_API_URL`
+   - Domínio: `pixeleats.com.br`
+
+2. **Projeto 2: Painel do Lojista & Master**
+   - Root Directory: `painel`
+   - Framework Preset: `Next.js`
+   - Variáveis: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_FRONTEND_URL`
+   - Domínio: `painel.pixeleats.com.br`
+
+3. **Projeto 3: Landing Page**
+   - Root Directory: `site-pixeleats`
+   - Framework Preset: `Next.js`
+   - Variáveis: `NEXT_PUBLIC_PAINEL_URL`
+   - Domínio: `institucional.pixeleats.com.br` (ou configure no domínio raiz com rewrites)
+
+---
+
+## 4. Configuração de Webhooks
+
+### A. Webhook do Asaas (Assinaturas SaaS)
+1. Acesse o painel do Asaas: **Configurações da Conta** -> **Integrações** -> **Webhooks**.
+2. URL do Webhook: `https://api.pixeleats.com.br/api/webhooks/asaas`
+3. Eventos selecionados:
+   - `PAYMENT_RECEIVED`
+   - `PAYMENT_CONFIRMED`
+   - `PAYMENT_OVERDUE`
+   - `PAYMENT_DELETED`
+   - `PAYMENT_REFUNDED`
+
+### B. Webhook do Mercado Pago (Pedidos dos Clientes)
+A URL do Webhook é gerada dinamicamente pelo backend com o ID do restaurante:
+`https://api.pixeleats.com.br/api/webhooks/mercadopago/:tenantId`
+
+---
+
+## 5. Troubleshooting Comum
+
+| Problema | Causa | Solução |
+| :--- | :--- | :--- |
+| **CORS blocked** | O domínio do frontend não está listado | Adicionar o domínio na variável `CORS_ORIGINS` do backend |
+| **WebSocket desconectando** | Backend hospedado em serverless | Migrar o backend para Railway/Render com container contínuo |
+| **Pix não gera no cardápio** | Lojista não preencheu o Access Token | O lojista deve ir em Configurações no Painel e salvar suas chaves do Mercado Pago |
+| **Trial expirado não bloqueia** | Worker não rodou | O `trialWorker` roda a cada hora no backend. Verifique os logs do backend para `[TrialWorker]` |
+| **E-mails caindo em spam** | Domínio não autenticado no Resend | Configurar registros SPF, DKIM e DMARC no DNS do domínio no painel da Resend |

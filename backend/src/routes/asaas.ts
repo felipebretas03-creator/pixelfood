@@ -145,7 +145,8 @@ router.post('/webhook', async (req, res) => {
                 name: intent.restaurantName,
                 slug: tenantSlug,
                 email: intent.email,
-                active: true
+                operationalStatus: 'OPEN',
+                subscriptionStatus: 'ACTIVE'
               }
             });
           }
